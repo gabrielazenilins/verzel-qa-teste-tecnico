@@ -8,7 +8,11 @@
     "test": "cucumber-js",
     "test:ui": "cucumber-js --tags \"@ui and not @manual\"",
     "test:api": "cucumber-js --tags \"@api and not @manual\"",
-    "postinstall": "playwright install chromium"
+    "test:chromium": "node scripts/run-browsers.js chromium",
+    "test:firefox": "node scripts/run-browsers.js firefox",
+    "test:webkit": "node scripts/run-browsers.js webkit",
+    "test:all": "node scripts/run-browsers.js chromium firefox webkit",
+    "postinstall": "playwright install chromium firefox webkit"
   },
   "devDependencies": {
     "@cucumber/cucumber": "^13.3.0",

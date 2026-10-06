@@ -12,7 +12,7 @@
 - **Regra:** CA06 ("O frete é grátis para compras com subtotal a partir de R$ 200,00, inclusive") e tabela de cálculo ("R$ 0,00 quando o subtotal é igual ou maior que R$ 200,00").
 - **Camada:** API (`POST /api/carrinho/calcular`), refletido na UI
 - **Cenários:** CT-XX (preencher quando os cenários forem numerados)
-- **Ambiente:** https://verzel-store.qa-test-verzel-store.workers.dev · ___________ (navegador) · 06/10/2026
+- **Ambiente:** https://verzel-store.qa-test-verzel-store.workers.dev · Google Chrome 154.0.8037.98 · 06/10/2026
 
 **Passos para reproduzir**
 1. Na vitrine, clicar 2 vezes em "Adicionar ao carrinho" da Mochila Urbana 20L (P005, R$ 100,00).
@@ -51,7 +51,7 @@
 ### BUG-02 — Menu de navegação some em telas de celular
 - **Severidade:** Baixa. Fora do escopo do card VZS-142; registrado como achado da exploração.
 - **Camada:** UI (responsividade)
-- **Ambiente:** DevTools, emulação Pixel 9 e dobráveis · ___________ (navegador)
+- **Ambiente:** DevTools, emulação Pixel 9 e dobráveis · Google Chrome 154.0.8037.98
 
 **Passos para reproduzir**
 1. Abrir a loja e ativar o modo dispositivo do DevTools (Pixel 9).

@@ -23,9 +23,9 @@ Skill específica deste repositório (teste técnico QA Júnior Verzel, card VZS
 
 ## 1. Stack e configuração
 - Playwright + Cucumber, JavaScript **CommonJS** (`require` / `module.exports`).
-- `support/world.js` abre e fecha o navegador por cenário. Cada cenário começa com contexto novo, portanto **carrinho vazio** (o carrinho fica só na aba). Não crie passos de "limpar carrinho".
+- `support/world.js` abre e fecha o navegador por cenário, escolhido pela variável `BROWSER` (`chromium` é o padrão, ou `firefox`/`webkit`). Para rodar nos três: `npm run test:all`. Cada cenário começa com contexto novo, portanto **carrinho vazio** (o carrinho fica só na aba). Não crie passos de "limpar carrinho".
 - `support/config.js` exporta `BASE_URL` (`process.env.BASE_URL` com fallback para a URL da loja). Nunca escreva a URL em outro arquivo.
-- `cucumber.js` exclui `@manual` da execução (`tags: 'not @manual'`).
+- `cucumber.js` exclui `@manual` da execução (`tags: 'not @manual'`), carrega o `world.js` antes dos outros arquivos de `support/` (assim o `After` que fecha o navegador roda por último) e gera um relatório por navegador (`reports/cucumber-report-<navegador>.html`).
 - Não altere `world.js`, `config.js` nem `cucumber.js` sem perguntar.
 
 ## 2. Mapa do projeto
@@ -220,8 +220,8 @@ Atenção: cada clique em +, −, aplicar ou remover dispara `POST /api/carrinho
 - `produtos.js` → mapa id → nome (`P001` → `Camiseta Essencial` …), usado para montar os `aria-label`. Os dados vêm da tabela do `CLAUDE.md`.
 - `config.js` → `BASE_URL`.
 - `api.hooks.js` → `Before({ tags: '@api' })` cria os clientes de API com `request.newContext({ baseURL, extraHTTPHeaders: { 'Content-Type': 'application/json' } })`; `After({ tags: '@api' })` faz `dispose()`.
-- `evidence.hooks.js` → num `After` para cenários `@ui` (arquivo próprio, sem mexer no `world.js`):
-  - sempre que o cenário **falhar** ou tiver tag `@bug-XX`, tire `page.screenshot({ fullPage: true })`, anexe ao relatório com `this.attach(..., 'image/png')` e salve em `docs/05-evidencias/automacao/<CT-XX>_<status>.png`;
+- `evidence.hooks.js` (já implementado) → num `After` para cenários `@ui`:
+  - sempre que o cenário **falhar** ou tiver tag `@bug-XX`, tira `page.screenshot({ fullPage: true })`, anexa ao relatório com `this.attach(..., 'image/png')` e salva em `docs/05-evidencias/automacao/<CT-XX>_<navegador>_<status>.png` (ex.: `CT-24_chromium_falhou.png`);
   - o ID vem da tag `@CT-XX` do cenário (`pickle.tags`).
   Assim cada execução gera a evidência do bug sem print manual.
 
