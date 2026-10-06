@@ -97,9 +97,11 @@ Then the shipping should be "0.00"
 Then the total should be "215.73"
 Then the amount missing for free shipping should be "0.20"
 Then the shipping should be free
+Then the free shipping notice should not be shown        # com frete grátis o aviso "Faltam R$ X" some (DOC-15)
 Then the free shipping notice should be "Faltam R$ 0,10 para o frete grátis."
 Then the coupon message should be "Cupom inválido."
 Then the coupon "BEMVINDO10" should be shown as applied
+Then the coupon field should not be shown                # com cupom aplicado, o campo some (CA05)
 Then the increase button of "P001" should be disabled
 Then I should see the limit message for "P001"
 Then the field "cep" should show the error "Informe um CEP com 8 dígitos."
@@ -221,14 +223,14 @@ Atenção: cada clique em +, −, aplicar ou remover dispara `POST /api/carrinho
 - `config.js` → `BASE_URL`.
 - `api.hooks.js` → `Before({ tags: '@api' })` cria os clientes de API com `request.newContext({ baseURL, extraHTTPHeaders: { 'Content-Type': 'application/json' } })`; `After({ tags: '@api' })` faz `dispose()`.
 - `evidence.hooks.js` (já implementado) → num `After` para cenários `@ui`:
-  - sempre que o cenário **falhar** ou tiver tag `@bug-XX`, tira `page.screenshot({ fullPage: true })`, anexa ao relatório com `this.attach(..., 'image/png')` e salva em `docs/05-evidencias/automacao/<CT-XX>_<navegador>_<status>.png` (ex.: `CT-24_chromium_falhou.png`);
-  - o ID vem da tag `@CT-XX` do cenário (`pickle.tags`).
+  - sempre que o cenário **falhar** ou tiver tag `@bug-XX`, tira `page.screenshot({ fullPage: true })`, anexa ao relatório com `this.attach(..., 'image/png')` e salva em `docs/05-evidencias/automacao/<CT-XX>_<navegador>_<status>.png` (ex.: `CT-20_chromium_falhou.png`);
+  - o ID vem da tag `@CT-XX` do cenário (`pickle.tags`). Em `Scenario Outline`, acrescenta a posição do exemplo, contando todos os blocos `Examples` em ordem: `<CT-XX>-ex<N>_<navegador>_<status>.png` (ex.: `CT-02-ex2_chromium_falhou.png`). Assim cada exemplo tem o seu print, como cada um tem a sua linha no `docs/03-execucao.md`.
   Assim cada execução gera a evidência do bug sem print manual.
 
 ## 6. Escrevendo cenários
 - Toda tag de cenário: `@CT-XX @CAXX @ui|@api @manual|@automatizado`.
 - Valores esperados concretos e calculados pela regra do `CLAUDE.md`. Use as combinações de produtos que já estão lá para os valores-limite.
-- `Scenario Outline` + `Examples` quando só os dados mudam (ex.: variações de maiúsculas e espaços do cupom, CEPs inválidos).
+- `Scenario Outline` + `Examples` quando só os dados mudam (ex.: variações de maiúsculas e espaços do cupom, CEPs inválidos). O Gherkin remove os espaços das bordas das células: para um valor com espaço no início ou no fim, ponha as aspas dentro da célula (`" bemVindo10 "`) e escreva o passo sem aspas (`And the coupon <cupom>`), como no CT-04 de `features/cupom.feature`.
 - Divisão entre camadas (não repita na UI o que a API já verifica):
   - **API** testa as regras e os valores: valores-limite, desconto, frete, faltante, total, arredondamento e códigos de erro. Prefira `Scenario Outline` para variar os dados.
   - **UI** testa só o que o cliente vê e faz: o que aparece na tela (mensagens, "Grátis", aviso "Faltam R$ X", cupom aplicado, botões travados) e as ações que mudam o carrinho (+, −, remover, aplicar e remover cupom). Poucos valores, só os representativos.
@@ -244,7 +246,7 @@ Feature: Frete grátis
 
   # UI: o que o cliente vê ao mudar o carrinho
   # Interpretação (DOC-15): com frete grátis, o aviso "Faltam R$ X" não é exibido.
-  @CT-23 @CA06 @ui @automatizado
+  @CT-22 @CA06 @ui @automatizado
   Scenario: Frete passa a ser grátis ao aumentar a quantidade no carrinho
     Given I have "P001" with quantity 3 in the cart       # clica N vezes em "Adicionar ao carrinho" na vitrine
     When I increase the quantity of "P001" 1 time
@@ -254,7 +256,7 @@ Feature: Frete grátis
     And the free shipping notice should not be shown
 
   # API: regras e valores, com os dados variando nos Examples
-  @CT-28 @CA08 @CA09 @api @automatizado
+  @CT-26 @CA08 @CA09 @api @automatizado
   Scenario Outline: API calcula desconto e frete com cupom
     Given the cart items:
       | produto    | quantidade |
@@ -293,7 +295,7 @@ O exemplo resume `features/frete.feature`; lá estão os cenários completos.
      - Resultado obtido: ...
      - Evidência: docs/05-evidencias/CT-XX_<descricao>.png
      ```
-  3. Atualize a linha do cenário em `docs/03-execucao.md`: `| CT-XX | título | CAXX | UI/API | manual/automatizado | Passou/Falhou/Bloqueado | evidência | BUG-XX |`. Em `Scenario Outline`, use **uma linha por exemplo** (ex.: `CT-26 · 199,90`), para cada resultado ter evidência própria.
+  3. Atualize a linha do cenário em `docs/03-execucao.md`: `| CT-XX | título | CAXX | UI/API | manual/automatizado | Passou/Falhou/Bloqueado | evidência | BUG-XX |`. Em `Scenario Outline`, use **uma linha por exemplo** (ex.: `CT-24 · 199,90`), para cada resultado ter evidência própria.
 - Evidências em `docs/05-evidencias/`, nome `CT-XX_<descricao>.png` (ou `.json` para respostas de API).
 
 ## 8. Resumo ao terminar

@@ -19,6 +19,8 @@ Feature: Frete grátis
     And the total should be "200.00"
     And the free shipping notice should not be shown
 
+  # Interpretação (DOC-02): o texto do aviso "Faltam R$ X para o frete grátis." é o da interface
+  # (comportamento observado); a documentação só diz que o carrinho informa quanto falta.
   @CT-21 @CA07 @ui @automatizado
   Scenario: Frete cobrado e aviso de R$ 0,10 com subtotal de R$ 199,90
     Given I have the following items in the cart:
@@ -31,22 +33,8 @@ Feature: Frete grátis
     And the total should be "219.80"
     And the free shipping notice should be "Faltam R$ 0,10 para o frete grátis."
 
-  # Subtotal acima do limite: verifica o CA08 na tela sem depender da correção do BUG-01.
-  @CT-22 @CA08 @ui @automatizado
-  Scenario: Frete continua grátis com cupom quando o subtotal passa de R$ 200,00
-    Given I have the following items in the cart:
-      | produto | quantidade |
-      | P001    | 1          |
-      | P004    | 1          |
-      | P005    | 1          |
-    When I apply the coupon "BEMVINDO10"
-    Then the subtotal should be "209.80"
-    And the discount should be "20.98"
-    And the shipping should be free
-    And the total should be "188.82"
-
   # Interpretação (DOC-15): com frete grátis, o aviso "Faltam R$ X" não é exibido.
-  @CT-23 @CA06 @ui @automatizado
+  @CT-22 @CA06 @ui @automatizado
   Scenario: Frete passa a ser grátis ao aumentar a quantidade no carrinho
     Given I have "P001" with quantity 3 in the cart
     When I increase the quantity of "P001" 1 time
@@ -55,22 +43,9 @@ Feature: Frete grátis
     And the total should be "239.60"
     And the free shipping notice should not be shown
 
-  @CT-24 @CA07 @ui @automatizado
-  Scenario: Frete volta a ser cobrado ao remover um item do carrinho
-    Given I have the following items in the cart:
-      | produto | quantidade |
-      | P001    | 1          |
-      | P004    | 1          |
-      | P005    | 1          |
-    When I remove "P004" from the cart
-    Then the subtotal should be "159.90"
-    And the shipping should be "19.90"
-    And the total should be "179.80"
-    And the free shipping notice should be "Faltam R$ 40,10 para o frete grátis."
-
   # ---------------------------------------------------------------- API (POST /api/carrinho/calcular)
 
-  @CT-25 @CA06 @api @automatizado @bug-01
+  @CT-23 @CA06 @api @automatizado @bug-01
   Scenario: API dá frete grátis com subtotal de exatamente R$ 200,00
     Given the cart items:
       | produto | quantidade |
@@ -83,7 +58,7 @@ Feature: Frete grátis
     And the response field "valorFaltanteFreteGratis" should be "0.00"
     And the response field "total" should be "200.00"
 
-  @CT-26 @CA06 @CA07 @api @automatizado
+  @CT-24 @CA06 @CA07 @api @automatizado
   Scenario Outline: API calcula frete e valor faltante acima e abaixo de R$ 200,00
     Given the cart items:
       | produto    | quantidade |
@@ -108,7 +83,7 @@ Feature: Frete grátis
       | P001     | 1    | P002     | 1    | 199.80   | 19.90 | false       | 0.20     | 219.70 |
       | P006     | 1    | P004     | 1    | 79.80    | 19.90 | false       | 120.20   | 99.70  |
 
-  @CT-27 @CA08 @api @automatizado @bug-01
+  @CT-25 @CA08 @api @automatizado @bug-01
   Scenario: API mantém frete grátis quando o cupom deixa o valor em R$ 180,00
     Given the cart items:
       | produto | quantidade |
@@ -126,7 +101,7 @@ Feature: Frete grátis
   # CA08: o frete grátis vale pelo subtotal antes do desconto, mesmo com o total abaixo de R$ 200,00.
   # CA09: o desconto incide só nos produtos (sobre o frete, daria 12,97 em vez de 10,98).
   # Nos dois casos, o faltante usa o subtotal antes do desconto.
-  @CT-28 @CA08 @CA09 @api @automatizado
+  @CT-26 @CA08 @CA09 @api @automatizado
   Scenario Outline: API calcula desconto e frete com cupom
     Given the cart items:
       | produto    | quantidade |
@@ -154,7 +129,7 @@ Feature: Frete grátis
 
   # O BUG-01 foi confirmado em /carrinho/calcular. Aqui ainda não sei se o pedido repete o erro;
   # a tag @bug-01 só entra se este cenário falhar.
-  @CT-29 @CA06 @api @automatizado
+  @CT-27 @CA06 @api @automatizado
   Scenario: Pedido com subtotal de exatamente R$ 200,00 sai com frete grátis
     Given the cart items:
       | produto | quantidade |
@@ -167,20 +142,3 @@ Feature: Frete grátis
     And the response field "freteGratis" should be "true"
     And the response field "valorFaltanteFreteGratis" should be "0.00"
     And the response field "total" should be "200.00"
-
-  # Mesmo exemplo da documentação para POST /api/pedidos.
-  @CT-30 @CA09 @api @automatizado
-  Scenario: Pedido com cupom não aplica o desconto sobre o frete
-    Given the cart items:
-      | produto | quantidade |
-      | P005    | 1          |
-    And the coupon "BEMVINDO10"
-    And the customer with name "Maria Silva", email "maria@exemplo.com" and zip code "01310-100"
-    When I create the order via API
-    Then the response status should be 201
-    And the response field "subtotal" should be "100.00"
-    And the response field "desconto" should be "10.00"
-    And the response field "frete" should be "19.90"
-    And the response field "freteGratis" should be "false"
-    And the response field "valorFaltanteFreteGratis" should be "100.00"
-    And the response field "total" should be "109.90"

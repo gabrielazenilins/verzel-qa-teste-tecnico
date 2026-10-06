@@ -141,7 +141,7 @@ Nenhuma destas contradiz a documentação, por isso não registrei como bug. Mes
 - Um cupom só com espaços (`"   "`) deveria cair aqui ou em "Cupom inválido."? Pela regra do CA02, os espaços são ignorados, então o resultado seria um cupom vazio.
 - Pela API, como `/carrinho/calcular` responde a `"cupom": ""`? O campo é opcional, então o esperado seria tratar como se não houvesse cupom.
 
-**Como vou cobrir:** um cenário de UI para o campo vazio e um para só espaços, além de um cenário de API com `"cupom": ""`. A interpretação vai registrada no plano de teste.
+**Como fica:** como observação, fora dos cenários críticos. O campo vazio é uma validação da própria tela, que não envolve desconto nem frete; se ela falhar, a entrega de cupom e frete não tem um problema real. Não há cenário automatizado para o campo vazio, o cupom só com espaços nem o `"cupom": ""` na API.
 
 ### OBS-02 — Validações do checkout só aparecem ao confirmar
 
@@ -163,7 +163,7 @@ Nenhuma destas contradiz a documentação, por isso não registrei como bug. Mes
 - Se o cupom fosse válido no carrinho e expirasse antes da confirmação, a tela trataria o 422? Não dá para reproduzir com os dados fixos do ambiente.
 - Não verifiquei o que o checkout envia para a API quando há um cupom válido aplicado. *(conferir o payload de `POST /api/pedidos` no Network)*
 
-**Como vou cobrir:** cenários direto na API, enviando `VERAO2026` e um cupom inexistente para `/api/pedidos` (espero 422 com o código certo), e os mesmos cupons para `/carrinho/calcular` (espero 200 sem desconto). Assim a diferença de comportamento entre os dois endpoints fica testada.
+**Como vou cobrir:** só pela API, com `VERAO2026` e um cupom inexistente: `/api/pedidos` deve responder 422 com o código certo (CT-06) e `/carrinho/calcular`, 200 sem desconto (CT-05), em `features/cupom.feature`. Assim a diferença de comportamento entre os dois endpoints fica testada. O comportamento da tela (o cupom recusado não vai para o checkout) fica como observação, fora dos cenários críticos.
 
 ### OBS-04 — Sem `data-testid`
 
@@ -192,7 +192,7 @@ Nada aqui é bug, nem faz parte do card VZS-142. São ideias que surgiram enquan
 | MEL-08 | Carrinho, cupom | Mostrar a mensagem que a API já devolve ("Cupom aplicado: 10% de desconto nos produtos.") em vez de só "Cupom BEMVINDO10 aplicado." | Deixa claro que o desconto vale só para os produtos (CA09) e evita a dúvida "por que o frete continua sendo cobrado?". Ver DOC-02. |
 
 ### Para conferir antes de entregar
-- [ ] OBS-01: testar cupom só com espaços e `"cupom": ""` na API
+- [x] OBS-01: cupom só com espaços e `"cupom": ""` na API ficaram como observação, fora dos cenários críticos
 - [ ] OBS-02: confirmar se a mensagem de erro some ao corrigir o campo
 - [ ] OBS-03: ver no Network o payload de `POST /api/pedidos` com cupom válido
 - [ ] "Esvaziar carrinho": ver se pede confirmação antes de apagar tudo (se não pedir, vira sugestão de melhoria)
@@ -255,13 +255,13 @@ Cada item termina com a interpretação que adotei e como pretendo testar.
 - **Documentação:** só cobre cupom inexistente e expirado. O campo `cupom` é opcional na API.
 - **Faltam:** o caso `"cupom": ""` e o caso `"cupom": "   "`, que, pelo CA02, vira vazio depois de tirar os espaços.
 - **Interpretação:** na API, cupom vazio ou só com espaços conta como "sem cupom" (sem erro, sem desconto, `cupom` nulo ou não aplicado). Na tela, "Informe um cupom." (comportamento observado).
-- **Teste:** um cenário de API para cada caso e um de UI para o campo vazio.
+- **Teste:** nenhum. Fica como observação, fora dos cenários críticos (ver OBS-01). A interpretação acima vale se o caso for verificado manualmente.
 
 #### DOC-07 — O CA02 vale também para a API?
 - **CA02:** "O código do cupom não diferencia maiúsculas de minúsculas, e espaços no início e no fim são ignorados."
 - **Problema:** não diz se a regra é da tela, da API ou das duas. Na exploração, a API recebeu `"verao2026"` e devolveu `"codigo": "VERAO2026"`, o que sugere que a API normaliza.
 - **Interpretação:** vale para as duas, porque "os cálculos são feitos pela API".
-- **Teste:** enviar `" bemvindo10 "` direto para `/carrinho/calcular` e para `/pedidos`.
+- **Teste:** enviar `" bemVindo10 "` para `/carrinho/calcular` (CT-04, em `features/cupom.feature`).
 
 #### DOC-08 — Regras de nome e e-mail pouco definidas
 - **Documentação:** "nome e sobrenome" e "formato válido", sem detalhes.
@@ -295,7 +295,7 @@ Cada item termina com a interpretação que adotei e como pretendo testar.
 - **Documentação:** o CA07 diz que, abaixo de R$ 200,00, "o carrinho informa quanto falta para o frete grátis". A tabela de cálculo diz que o faltante é "R$ 200,00 menos o subtotal, nunca menor que zero". Nenhuma das duas diz o que a tela mostra quando o frete já é grátis.
 - **Exploração:** com subtotal de R$ 209,80 (caso 4-08), o frete aparece como "Grátis" e o aviso some. Com R$ 200,00 (BUG-01), a tela mostra "Faltam R$ 0,00 para o frete grátis." junto do frete cobrado.
 - **Interpretação:** com frete grátis, o valor do frete aparece como "Grátis" e o aviso "Faltam R$ X" não é exibido. "Faltam R$ 0,00" não é o comportamento esperado. Na API, o mesmo caso devolve `valorFaltanteFreteGratis: 0`.
-- **Teste:** CT-20 e CT-23 verificam na tela que o aviso não aparece; CT-25 verifica o faltante zero na API com subtotal de exatamente R$ 200,00 (e o CT-26, acima do limite).
+- **Teste:** CT-20 e CT-22 verificam na tela que o aviso não aparece; CT-23 verifica o faltante zero na API com subtotal de exatamente R$ 200,00 (e o CT-24, acima do limite).
 
 ---
 

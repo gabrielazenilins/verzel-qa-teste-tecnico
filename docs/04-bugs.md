@@ -9,9 +9,9 @@
 
 ### BUG-01 — API cobra frete com subtotal de exatamente R$ 200,00
 - **Severidade:** Alta. Regra principal da entrega; o cliente paga R$ 19,90 que não deveria pagar.
-- **Regra:** CA06 ("O frete é grátis para compras com subtotal a partir de R$ 200,00, inclusive") e tabela de cálculo ("R$ 0,00 quando o subtotal é igual ou maior que R$ 200,00"). Afeta também o CA08: com cupom, o frete continua sendo cobrado (CT-27).
+- **Regra:** CA06 ("O frete é grátis para compras com subtotal a partir de R$ 200,00, inclusive") e tabela de cálculo ("R$ 0,00 quando o subtotal é igual ou maior que R$ 200,00"). Afeta também o CA08: com cupom, o frete continua sendo cobrado (CT-25).
 - **Camada:** API (`POST /api/carrinho/calcular`), refletido na UI
-- **Cenários:** CT-20 (UI, CA06), CT-25 (API, CA06) e CT-27 (API, CA08, com cupom), em `features/frete.feature`
+- **Cenários:** CT-20 (UI, CA06), CT-23 (API, CA06) e CT-25 (API, CA08, com cupom), em `features/frete.feature`
 - **Ambiente:** https://verzel-store.qa-test-verzel-store.workers.dev · Google Chrome 154.0.8037.98 · 06/10/2026
 
 **Passos para reproduzir**
@@ -44,7 +44,7 @@
 - Acima do limite a regra funciona: P001 + P004 + P005 (R$ 209,80) → frete "Grátis"; com BEMVINDO10 → desconto R$ 20,98, frete grátis, total R$ 188,82 (CA08 atendido).
 - Abaixo do limite também: R$ 199,90 e R$ 199,80 cobram R$ 19,90 e informam R$ 0,10 e R$ 0,20 faltantes.
 - O defeito está só no valor-limite: indica comparação `subtotal > 200` em vez de `subtotal >= 200`.
-- Como o erro está na API, ele também deve afetar `POST /api/pedidos` (mesmo resumo de valores). Confirmar com o CT-29.
+- Como o erro está na API, ele também deve afetar `POST /api/pedidos` (mesmo resumo de valores). Confirmar com o CT-27.
 
 ---
 

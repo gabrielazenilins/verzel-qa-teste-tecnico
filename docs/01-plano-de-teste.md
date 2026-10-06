@@ -20,13 +20,19 @@ Verificar se a entrega do card VZS-142 (v2.3.0), que trata de cupom de desconto 
 - Layout no celular. Registrei o BUG-02 durante a exploração, mas ele não faz parte do card.
 - O limite de data de validade do cupom (DOC-13).
 
+## Critério de priorização
+
+Mantenho só os cenários críticos. Para cada um, pergunto: **se este cenário falhar, a entrega tem um problema real?** Se a resposta é não, o comportamento fica registrado como observação em [00-exploracao.md](00-exploracao.md), sem cenário automatizado. Foi o que aconteceu com o cupom vazio (OBS-01, DOC-06) e com o cupom recusado no checkout (OBS-03).
+
+Também não repito o mesmo teste nas duas camadas: a **API** cobre as regras e os valores, e a **UI** cobre só o que o cliente vê e faz na tela.
+
 ## Estratégia
 
 A documentação diz que "os cálculos são feitos pela API e a interface apenas exibe o resultado". Por isso divido assim:
 
 - **API, onde ficam as regras de valor.** É aqui que testo com mais profundidade os valores-limite do frete, o desconto, a fórmula e o arredondamento. Comparo números exatos, o que também pega erro de ponto flutuante (DOC-12). Também ficam só na API os casos que a tela não deixa reproduzir: quantidades 0, negativas ou acima de 5 (a tela só tem botões + e −), o 422 de cupom em `/pedidos` (DOC-14), a normalização do CEP (DOC-03) e todos os códigos de erro.
 - **UI, onde fica o comportamento da tela.** Aqui cubro o que só existe na tela: a mensagem do cupom, o cupom aplicado com o botão "Remover cupom" (CA05), o aviso "Faltam R$ X para o frete grátis.", os botões + e − travando em 5 e em 1, as mensagens do checkout e a confirmação. Para os valores, verifico se a tela mostra o que a API calculou em alguns casos representativos, sem repetir todas as combinações.
-- **Nas duas camadas:** CA01, CA02 (DOC-07), CA03/CA04, o limite de R$ 200,00 do CA06 e o CA10. São as regras centrais do card, e um defeito em qualquer uma das camadas chega ao cliente.
+- **Nas duas camadas:** CA01, CA03/CA04, o limite de R$ 200,00 do CA06 e o CA10. O CA02, o CA08 e o CA09 ficam só na API, porque são regras de valor; o CA05 fica só na UI, porque é o comportamento do campo de cupom. São as regras centrais do card, e um defeito em qualquer uma das camadas chega ao cliente.
 
 Automatizo com Playwright + Cucumber. Marco como `@manual` só o que não compensa automatizar, como checagens visuais. Quando um cenário falha porque o sistema contraria a documentação, não ajusto o esperado: abro o bug e marco o cenário com `@bug-XX`.
 
@@ -50,12 +56,12 @@ Os produtos, preços e cupons são fixos (tabela em [CLAUDE.md](../CLAUDE.md#dad
 | Logo abaixo | P001 + P002 | 199,80 | frete 19,90, faltam 0,20 |
 | No limite − 0,10 | P005 + P008 + P004 | 199,90 | frete 19,90, faltam 0,10 |
 | **No limite** | P005 ×2 | 200,00 | frete grátis (hoje falha: BUG-01) |
-| Acima | P001 + P004 + P005 | 209,80 | frete grátis |
+| Acima | P003 + P006 | 219,80 | frete grátis, faltante zero |
 | Exemplo da documentação | P002 + P004 ×2 | 239,70 | desconto 23,97, total 215,73 |
-| CA08 com cupom | P001 + P004 + P005 + BEMVINDO10 | 209,80 | total 188,82, frete continua grátis |
-| CA09 | P005 ×1 + BEMVINDO10 | 100,00 | desconto 10,00 só nos produtos, total 109,90 |
+| CA08 com cupom | P003 + P006 + BEMVINDO10 | 219,80 | desconto 21,98, total 197,82 (abaixo de 200), frete continua grátis |
+| CA09 | P001 + P004 + BEMVINDO10 | 109,80 | desconto 10,98 só nos produtos, total 118,72 |
 
-- **Cupons:** `BEMVINDO10` em maiúsculas, minúsculas, misto e com espaços; `VERAO2026` (expirado); `XYZ123` (inexistente); `BEM VINDO10` (espaço no meio); vazio e só com espaços (DOC-06).
+- **Cupons:** `BEMVINDO10` em maiúsculas, em minúsculas e misturado com espaços no início e no fim; `VERAO2026` (expirado); `XYZ123` (inexistente). O cupom vazio e o só com espaços ficaram como observação (OBS-01, DOC-06).
 - **Quantidade:** 1 e 5 (válidos); 0, −1 e 6 (inválidos, pela API).
 - **Cliente:** Maria Silva / maria@exemplo.com / 01310-100. Os casos de CEP, nome e e-mail inválidos vêm da exploração (seção 5) e da DOC-08.
 
@@ -77,7 +83,7 @@ npx cucumber-js --tags "@CT-24"      # um cenário
 $env:HEADLESS="false"; npm test      # PowerShell, com o navegador visível
 ```
 
-Cada navegador gera o seu relatório em `reports/cucumber-report-<navegador>.html`, e cada cenário de UI registra o navegador e a versão usados. Quando um cenário de UI falha ou tem `@bug-XX`, o print é anexado ao relatório e salvo em `docs/05-evidencias/automacao/CT-XX_<navegador>_<passou|falhou>.png`.
+Cada navegador gera o seu relatório em `reports/cucumber-report-<navegador>.html`, e cada cenário de UI registra o navegador e a versão usados. Quando um cenário de UI falha ou tem `@bug-XX`, o print é anexado ao relatório e salvo em `docs/05-evidencias/automacao/CT-XX_<navegador>_<passou|falhou>.png`. Em `Scenario Outline`, o nome ganha o sufixo `-ex<N>`, com a posição do exemplo (ex.: `CT-02-ex2_chromium_falhou.png`), para cada exemplo ter o seu print.
 
 ## Riscos e limitações
 
