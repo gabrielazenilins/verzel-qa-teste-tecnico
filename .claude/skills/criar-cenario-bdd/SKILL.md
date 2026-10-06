@@ -10,9 +10,9 @@ Skill específica deste repositório (teste técnico QA Júnior Verzel, card VZS
 **Divisão de responsabilidades:**
 - `CLAUDE.md` (raiz) = O QUE o sistema deve fazer: regras CA01–CA11, fórmula do total, dados de teste, códigos de erro, o que NÃO é bug, fora de escopo.
 - Esta skill = COMO escrever e organizar os testes.
-- Nunca copie regras de negócio para esta skill nem para os testes "de cabeça": consulte o `CLAUDE.md` e, em caso de dúvida, `docs/referencias/documentacao-v2.3.0.pdf`.
+- Nunca copie regras de negócio para esta skill nem para os testes "de cabeça": consulte o `CLAUDE.md` e, em caso de dúvida, `docs/referencias/documentacao-v2.3.0.md` (o PDF original só serve para tirar dúvida sobre a transcrição).
 
-> Locators e rotas confirmados na exploração manual de 06/10/2026 (`docs/00-roteiro-exploracao`).
+> Locators e rotas confirmados na exploração manual de 06/10/2026 (`docs/00-exploracao.md`).
 > A loja não usa `data-testid`; use os ganchos estáveis listados na seção 4.
 
 ## 0. Antes de qualquer tarefa
