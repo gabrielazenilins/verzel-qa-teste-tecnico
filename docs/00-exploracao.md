@@ -291,6 +291,12 @@ Cada item termina com a interpretação que adotei e como pretendo testar.
 - **Falta:** a lista de métodos aceitos não é explícita. Deduzi pelos exemplos: `GET` nos produtos e `POST` no carrinho e nos pedidos.
 - **Teste:** `GET /api/carrinho/calcular`, `GET /api/pedidos` e `POST /api/produtos`, esperando 405.
 
+#### DOC-15 — O que o carrinho mostra quando o frete já é grátis
+- **Documentação:** o CA07 diz que, abaixo de R$ 200,00, "o carrinho informa quanto falta para o frete grátis". A tabela de cálculo diz que o faltante é "R$ 200,00 menos o subtotal, nunca menor que zero". Nenhuma das duas diz o que a tela mostra quando o frete já é grátis.
+- **Exploração:** com subtotal de R$ 209,80 (caso 4-08), o frete aparece como "Grátis" e o aviso some. Com R$ 200,00 (BUG-01), a tela mostra "Faltam R$ 0,00 para o frete grátis." junto do frete cobrado.
+- **Interpretação:** com frete grátis, o valor do frete aparece como "Grátis" e o aviso "Faltam R$ X" não é exibido. "Faltam R$ 0,00" não é o comportamento esperado. Na API, o mesmo caso devolve `valorFaltanteFreteGratis: 0`.
+- **Teste:** CT-20 e CT-23 verificam na tela que o aviso não aparece; CT-25 verifica o faltante zero na API com subtotal de exatamente R$ 200,00 (e o CT-26, acima do limite).
+
 ---
 
 ### Pontos difíceis de testar
@@ -330,3 +336,4 @@ Cada item termina com a interpretação que adotei e como pretendo testar.
 | DOC-12 | Difícil de testar | Arredondamento | verificar ponto flutuante e no máximo 2 casas |
 | DOC-13 | Difícil de testar | Data de validade | limite de data não testável |
 | DOC-14 | Difícil de testar | 422 de cupom em `/pedidos` | só pela API |
+| DOC-15 | Lacuna | Aviso de frete com frete grátis | "Grátis" no frete e sem o aviso "Faltam R$ X" |

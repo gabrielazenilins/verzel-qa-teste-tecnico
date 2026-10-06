@@ -229,7 +229,10 @@ Atenção: cada clique em +, −, aplicar ou remover dispara `POST /api/carrinho
 - Toda tag de cenário: `@CT-XX @CAXX @ui|@api @manual|@automatizado`.
 - Valores esperados concretos e calculados pela regra do `CLAUDE.md`. Use as combinações de produtos que já estão lá para os valores-limite.
 - `Scenario Outline` + `Examples` quando só os dados mudam (ex.: variações de maiúsculas e espaços do cupom, CEPs inválidos).
-- Sempre que a regra valer para UI e API, crie um cenário de cada camada.
+- Divisão entre camadas (não repita na UI o que a API já verifica):
+  - **API** testa as regras e os valores: valores-limite, desconto, frete, faltante, total, arredondamento e códigos de erro. Prefira `Scenario Outline` para variar os dados.
+  - **UI** testa só o que o cliente vê e faz: o que aparece na tela (mensagens, "Grátis", aviso "Faltam R$ X", cupom aplicado, botões travados) e as ações que mudam o carrinho (+, −, remover, aplicar e remover cupom). Poucos valores, só os representativos.
+  - Um bug confirmado nas duas camadas ganha um cenário em cada uma.
 - Não crie cenário que trate como defeito algo listado em "NÃO é bug" no `CLAUDE.md`.
 - Ambiguidade: escreva com a interpretação adotada, coloque `# Interpretação: ...` acima do cenário e registre em `docs/00-exploracao.md` (seção "Análise da documentação", como um novo item DOC-XX).
 
@@ -239,15 +242,41 @@ Feature: Frete grátis
   Eu quero ganhar frete grátis em compras a partir de R$ 200,00
   Para pagar menos nas minhas compras
 
-  @CT-24 @CA08 @ui @automatizado
-  Scenario: Frete continua grátis quando o cupom deixa o valor abaixo de R$ 200,00
-    Given I have "P005" with quantity 2 in the cart       # clica N vezes em "Adicionar ao carrinho" na vitrine
-    When I apply the coupon "BEMVINDO10"
-    Then the subtotal should be "200.00"
-    And the discount should be "20.00"
-    And the shipping should be "0.00"
-    And the total should be "180.00"
+  # UI: o que o cliente vê ao mudar o carrinho
+  # Interpretação (DOC-15): com frete grátis, o aviso "Faltam R$ X" não é exibido.
+  @CT-23 @CA06 @ui @automatizado
+  Scenario: Frete passa a ser grátis ao aumentar a quantidade no carrinho
+    Given I have "P001" with quantity 3 in the cart       # clica N vezes em "Adicionar ao carrinho" na vitrine
+    When I increase the quantity of "P001" 1 time
+    Then the subtotal should be "239.60"
+    And the shipping should be free
+    And the total should be "239.60"
+    And the free shipping notice should not be shown
+
+  # API: regras e valores, com os dados variando nos Examples
+  @CT-28 @CA08 @CA09 @api @automatizado
+  Scenario Outline: API calcula desconto e frete com cupom
+    Given the cart items:
+      | produto    | quantidade |
+      | <produto1> | <qtd1>     |
+      | <produto2> | <qtd2>     |
+    And the coupon "BEMVINDO10"
+    When I calculate the cart via API
+    Then the response status should be 200
+    And the response field "desconto" should be "<desconto>"
+    And the response field "frete" should be "<frete>"
+    And the response field "valorFaltanteFreteGratis" should be "<faltante>"
+    And the response field "total" should be "<total>"
+
+    Examples: CA08 - frete grátis mesmo com o total abaixo de R$ 200,00
+      | produto1 | qtd1 | produto2 | qtd2 | desconto | frete | faltante | total  |
+      | P003     | 1    | P006     | 1    | 21.98    | 0.00  | 0.00     | 197.82 |
+
+    Examples: CA09 - desconto não incide sobre o frete
+      | produto1 | qtd1 | produto2 | qtd2 | desconto | frete | faltante | total  |
+      | P001     | 1    | P004     | 1    | 10.98    | 19.90 | 90.20    | 118.72 |
 ```
+O exemplo resume `features/frete.feature`; lá estão os cenários completos.
 
 ## 7. Rodar e registrar
 - Um cenário: `npx cucumber-js --tags "@CT-24"`. Uma feature: `npx cucumber-js features/frete.feature`.
@@ -264,7 +293,7 @@ Feature: Frete grátis
      - Resultado obtido: ...
      - Evidência: docs/05-evidencias/CT-XX_<descricao>.png
      ```
-  3. Atualize a linha do cenário em `docs/03-execucao.md`: `| CT-XX | título | CAXX | UI/API | manual/automatizado | Passou/Falhou/Bloqueado | evidência | BUG-XX |`
+  3. Atualize a linha do cenário em `docs/03-execucao.md`: `| CT-XX | título | CAXX | UI/API | manual/automatizado | Passou/Falhou/Bloqueado | evidência | BUG-XX |`. Em `Scenario Outline`, use **uma linha por exemplo** (ex.: `CT-26 · 199,90`), para cada resultado ter evidência própria.
 - Evidências em `docs/05-evidencias/`, nome `CT-XX_<descricao>.png` (ou `.json` para respostas de API).
 
 ## 8. Resumo ao terminar

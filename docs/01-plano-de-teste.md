@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Verificar se a entrega do card VZS-142 (v2.3.0), que trata de cupom de desconto e frete grátis, atende aos critérios CA01 a CA11 na interface e na API. Também testo o checkout, porque é nele que o total calculado vira pedido. As regras estão na [documentação](referencias/documentacao-v2.3.0.md) e não repito aqui. Quando a documentação deixa dúvida, sigo a interpretação registrada em [Análise da documentação](00-exploracao.md#análise-da-documentação) (DOC-01 a DOC-14).
+Verificar se a entrega do card VZS-142 (v2.3.0), que trata de cupom de desconto e frete grátis, atende aos critérios CA01 a CA11 na interface e na API. Também testo o checkout, porque é nele que o total calculado vira pedido. As regras estão na [documentação](referencias/documentacao-v2.3.0.md) e não repito aqui. Quando a documentação deixa dúvida, sigo a interpretação registrada em [Análise da documentação](00-exploracao.md#análise-da-documentação) (DOC-01 a DOC-15).
 
 ## Escopo
 
@@ -98,7 +98,7 @@ Cada navegador gera o seu relatório em `reports/cucumber-report-<navegador>.htm
 
 | Documento | Conteúdo |
 |---|---|
-| [00-exploracao.md](00-exploracao.md) | Exploração manual, observações e análise da documentação (DOC-01 a DOC-14) |
+| [00-exploracao.md](00-exploracao.md) | Exploração manual, observações e análise da documentação (DOC-01 a DOC-15) |
 | [01-plano-de-teste.md](01-plano-de-teste.md) | Este plano |
 | 02-matriz-rastreabilidade.md | Critério × cenário × camada (a ser criada) |
 | [03-execucao.md](03-execucao.md) | Resultado de cada cenário |
