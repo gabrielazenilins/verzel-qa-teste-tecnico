@@ -12,16 +12,8 @@ Skill específica deste repositório (teste técnico QA Júnior Verzel, card VZS
 - Esta skill = COMO escrever e organizar os testes.
 - Nunca copie regras de negócio para esta skill nem para os testes "de cabeça": consulte o `CLAUDE.md` e, em caso de dúvida, `docs/referencias/documentacao-v2.3.0.pdf`.
 
-> ## ⚠️ PENDÊNCIAS — AJUSTAR ANTES DE USAR
-> Tudo marcado com **⚠️ AJUSTAR** nesta skill é provisório e foi escrito sem ver a interface.
-> Depois da exploração manual, revise:
-> - [ ] Nomes e rotas das telas (seção 2.1)
-> - [ ] Seletores/locators dos Page Objects (seção 4)
-> - [ ] Textos de botões e rótulos usados nos exemplos (seção 4)
-> - [ ] Como a quantidade é alterada na UI: botão +/−, campo numérico ou select (seção 3)
-> - [ ] Onde o cupom é aplicado: carrinho ou checkout (seções 2.1 e 4)
-> - [ ] Formato em que a UI exibe valores, para o helper `money.js` (seção 5)
-> Quando terminar, apague os marcadores ⚠️ AJUSTAR e esta caixa.
+> Locators e rotas confirmados na exploração manual de 06/10/2026 (`docs/00-roteiro-exploracao`).
+> A loja não usa `data-testid`; use os ganchos estáveis listados na seção 4.
 
 ## 0. Antes de qualquer tarefa
 1. Leia o `CLAUDE.md`.
@@ -39,13 +31,22 @@ Skill específica deste repositório (teste técnico QA Júnior Verzel, card VZS
 ## 2. Mapa do projeto
 
 ### 2.1 Telas e Page Objects (`pages/`)
-| Page Object | Tela | Rota | Responsabilidade |
+| Page Object | Tela | Rota | Como confirmar que está na tela |
 |---|---|---|---|
-| `CatalogPage` | Lista de produtos | `/` ⚠️ AJUSTAR | listar produtos, adicionar ao carrinho, abrir o carrinho |
-| `CartPage` | Carrinho | `/carrinho` ⚠️ AJUSTAR | itens, quantidade, remover item, cupom (⚠️ AJUSTAR se o cupom ficar no checkout), subtotal, desconto, frete, valor faltante, total |
-| `CheckoutPage` | Finalização | `/checkout` ⚠️ AJUSTAR | nome, e-mail, CEP, mensagens de validação, confirmar pedido |
-| `ConfirmationPage` | Confirmação | ⚠️ AJUSTAR | número do pedido, resumo de valores |
-| `components/Header.js` | Cabeçalho | todas | contador do carrinho, links Produtos/Documentação/Carrinho |
+| `CatalogPage` | Vitrine de produtos | `/` | `h2#titulo-vitrine` = "Produtos" · título da aba "Produtos \| Verzel Store" |
+| `CartPage` | Carrinho | `/carrinho` | `h1` = "Carrinho" (vazio: `h1` = "Seu carrinho está vazio") |
+| `CheckoutPage` | Finalizar compra | `/checkout` | `h1` = "Finalizar compra" |
+| `ConfirmationPage` | Pedido confirmado | `/pedido-confirmado` | `.confirmacao-selo` = "Pedido confirmado" |
+| `components/Header.js` | Cabeçalho | todas | links Produtos / Documentação / Carrinho e `.contador-carrinho` |
+
+Comportamentos da interface (confirmados):
+- Não há página de produto nem escolha de quantidade na vitrine: cada clique em "Adicionar ao carrinho" soma 1 unidade e atualiza o aviso do card (ex.: "3 no carrinho"). Com 5 unidades, o botão do produto fica desabilitado e o aviso mostra "Limite de 5 unidades atingido.".
+- O cupom fica **no carrinho**. Com cupom aplicado, o campo some e aparece "Cupom BEMVINDO10 aplicado." com o botão "Remover cupom".
+- Quantidade só por botões +/−. O "−" fica desabilitado em 1; o "+" fica desabilitado em 5 e aparece "Limite de 5 unidades por produto.". Para tirar o item, use "Remover".
+- O carrinho e o cupom sobrevivem ao F5 (ficam na aba). Após confirmar o pedido, o carrinho é esvaziado.
+- Cupom inválido ou expirado não é levado ao checkout; o erro 422 de `/api/pedidos` só é testável pela API.
+- No checkout, as validações aparecem só ao clicar em "Confirmar pedido".
+- Cada alteração no carrinho chama `POST /api/carrinho/calcular`; a tela exibe o resultado.
 
 ### 2.2 Clientes de API (`api/`)
 | Cliente | Endpoints |
@@ -77,14 +78,16 @@ Valores monetários nos passos sempre como string com ponto decimal: `"23.97"`, 
 **`steps/common.steps.js` — UI**
 ```gherkin
 Given I am on the products page
-Given I have "P005" with quantity 2 in the cart
+Given I have "P005" with quantity 2 in the cart       # clica N vezes em "Adicionar ao carrinho" na vitrine
 Given I have the following items in the cart:
   | produto | quantidade |
   | P002    | 1          |
   | P004    | 2          |
 When I apply the coupon "BEMVINDO10"
 When I remove the coupon
-When I change the quantity of "P001" to 3          # ⚠️ AJUSTAR conforme o controle de quantidade da UI
+When I increase the quantity of "P001" 2 times
+When I decrease the quantity of "P001" 1 time
+When I remove "P001" from the cart
 When I go to checkout
 When I fill the customer data with name "Maria Silva", email "maria@exemplo.com" and zip code "01310-100"
 When I confirm the order
@@ -93,7 +96,13 @@ Then the discount should be "23.97"
 Then the shipping should be "0.00"
 Then the total should be "215.73"
 Then the amount missing for free shipping should be "0.20"
+Then the shipping should be free
+Then the free shipping notice should be "Faltam R$ 0,10 para o frete grátis."
 Then the coupon message should be "Cupom inválido."
+Then the coupon "BEMVINDO10" should be shown as applied
+Then the increase button of "P001" should be disabled
+Then I should see the limit message for "P001"
+Then the field "cep" should show the error "Informe um CEP com 8 dígitos."
 Then I should see the order confirmation with a number in the format VZ-000000
 ```
 
@@ -117,54 +126,104 @@ Then the error code should be "QUANTIDADE_MAXIMA_EXCEDIDA" on field "itens[0].qu
 - Os passos `Given` de API só montam o corpo em `this.requestBody`; quem envia é o `When`.
 
 ## 4. Page Objects
-- Locators no constructor, preferindo `getByRole`, `getByLabel`, `getByTestId`. Evite XPath e seletor por posição.
+- Sem `data-testid` na loja. Use, nesta ordem: `getByRole` com o nome acessível (`aria-label`), `#id`, `[data-valor=...]` e classes semânticas (`.aviso-frete`). Evite XPath e seletor por posição.
 - Métodos de ação e de leitura (`getTotalText()`), **sem `expect`**.
 - Leituras de valor devolvem o texto cru; a conversão para número é feita no step com `money.js`.
+- Os `aria-label` usam o **nome** do produto, não o id. Converta id → nome com `support/produtos.js`.
 - Se a tela já tiver Page Object, acrescente métodos em vez de recriar.
+
+### Ganchos confirmados
+| Tela | Elemento | Locator |
+|---|---|---|
+| Vitrine | botão adicionar do produto | `page.locator('.produto-corpo').filter({ has: page.locator('#nome-P002') }).getByRole('button', { name: 'Adicionar ao carrinho' })` |
+| Vitrine | aviso do card ("3 no carrinho"; no limite, "Limite de 5 unidades atingido." com a classe `produto-aviso-limite`) | `#aviso-P002` |
+| Vitrine | botão adicionar no limite | o mesmo botão, com `disabled` e `aria-describedby="aviso-P002"` |
+| Cabeçalho | contador (soma de **unidades**: P001 ×3 → 3) | `.contador-carrinho` |
+| Carrinho | aumentar / diminuir | `getByRole('button', { name: 'Aumentar quantidade de Camiseta Essencial' })` / `'Diminuir quantidade de ...'` |
+| Carrinho | quantidade | `getByRole('group', { name: 'Quantidade de Camiseta Essencial' }).locator('output')` |
+| Carrinho | remover item | `getByRole('button', { name: 'Remover Camiseta Essencial do carrinho' })` |
+| Carrinho | aviso de limite | `.item-limite` ("Limite de 5 unidades por produto.") |
+| Carrinho | campo do cupom | `#campo-cupom` |
+| Carrinho | aplicar cupom | `getByRole('button', { name: 'Aplicar cupom' })` |
+| Carrinho | mensagem de erro do cupom | `#mensagem-cupom` ("Cupom inválido.", "Cupom expirado.", "Informe um cupom.") |
+| Carrinho | cupom aplicado | `.cupom-aplicado` ("Cupom BEMVINDO10 aplicado.") |
+| Carrinho | remover cupom | `getByRole('button', { name: 'Remover cupom' })` |
+| Carrinho | aviso de frete | `.aviso-frete` ("Faltam R$ X para o frete grátis."). Com frete grátis, o aviso **não aparece** e `[data-valor="frete"]` mostra "Grátis" |
+| Carrinho | finalizar | `getByRole('link', { name: 'Finalizar compra' })` |
+| Carrinho | esvaziar | `getByRole('button', { name: 'Esvaziar carrinho' })` |
+| Carrinho, Checkout, Confirmação | valores | `[data-valor="subtotal"]`, `[data-valor="desconto"]`, `[data-valor="frete"]`, `[data-valor="total"]` |
+| Checkout, Confirmação | itens do resumo | `.resumo-itens li` (ex.: "5x Kit 3 Pares de Meias · R$ 149,50") |
+| Checkout | campos | `#campo-nome`, `#campo-email`, `#campo-cep` |
+| Checkout | erros dos campos | `#campo-nome-erro`, `#campo-email-erro`, `#campo-cep-erro` |
+| Checkout | confirmar | `getByRole('button', { name: 'Confirmar pedido' })` |
+| Confirmação | número do pedido | `.numero-pedido` (ex.: "VZ-856317") |
 
 ```js
 const { BASE_URL } = require('../support/config')
+const { nomeDoProduto } = require('../support/produtos')
 
 class CartPage {
     constructor(page){
         this.page = page
-        // ⚠️ AJUSTAR: todos os locators abaixo são provisórios
-        this.couponInput    = page.getByLabel('Cupom')
-        this.applyCoupon_   = page.getByRole('button', { name: 'Aplicar' })
-        this.removeCoupon_  = page.getByRole('button', { name: 'Remover cupom' })
-        this.couponMessage  = page.getByTestId('cupom-mensagem')
-        this.subtotal       = page.getByTestId('subtotal')
-        this.discount       = page.getByTestId('desconto')
-        this.shipping       = page.getByTestId('frete')
-        this.missingFree    = page.getByTestId('faltante-frete-gratis')
-        this.total          = page.getByTestId('total')
-        this.checkoutButton = page.getByRole('button', { name: 'Finalizar compra' })
+        this.heading        = page.getByRole('heading', { level: 1 })
+        this.couponInput    = page.locator('#campo-cupom')
+        this.applyCouponBtn = page.getByRole('button', { name: 'Aplicar cupom' })
+        this.removeCouponBtn= page.getByRole('button', { name: 'Remover cupom' })
+        this.couponMessage  = page.locator('#mensagem-cupom')
+        this.couponApplied  = page.locator('.cupom-aplicado')
+        this.subtotal       = page.locator('[data-valor="subtotal"]')
+        this.discount       = page.locator('[data-valor="desconto"]')
+        this.shipping       = page.locator('[data-valor="frete"]')
+        this.total          = page.locator('[data-valor="total"]')
+        this.shippingNotice = page.locator('.aviso-frete')
+        this.limitMessage   = page.locator('.item-limite')
+        this.checkoutLink   = page.getByRole('link', { name: 'Finalizar compra' })
     }
     async open(){
-        await this.page.goto(`${BASE_URL}/carrinho`)   // ⚠️ AJUSTAR rota
+        await this.page.goto(`${BASE_URL}/carrinho`)
+    }
+    increaseButton(id){
+        return this.page.getByRole('button', { name: `Aumentar quantidade de ${nomeDoProduto(id)}` })
+    }
+    decreaseButton(id){
+        return this.page.getByRole('button', { name: `Diminuir quantidade de ${nomeDoProduto(id)}` })
+    }
+    async increase(id, times = 1){
+        for (let i = 0; i < times; i++) await this.increaseButton(id).click()
+    }
+    async remove(id){
+        await this.page.getByRole('button', { name: `Remover ${nomeDoProduto(id)} do carrinho` }).click()
     }
     async applyCoupon(code){
         await this.couponInput.fill(code)
-        await this.applyCoupon_.click()
+        await this.applyCouponBtn.click()
     }
     async removeCoupon(){
-        await this.removeCoupon_.click()
+        await this.removeCouponBtn.click()
     }
     async getTotalText(){
         return this.total.innerText()
     }
     async goToCheckout(){
-        await this.checkoutButton.click()
+        await this.checkoutLink.click()
     }
 }
 module.exports = CartPage
 ```
+Atenção: cada clique em +, −, aplicar ou remover dispara `POST /api/carrinho/calcular`. Antes de ler valores, espere a resposta (`page.waitForResponse('**/api/carrinho/calcular')`) ou use asserções com espera automática (`toHaveText`). Nunca `waitForTimeout`.
 
 ## 5. Helpers (`support/`)
-- `money.js` → `parseMoney('R$ 1.234,56')` devolve `1234.56`. ⚠️ AJUSTAR conforme o formato real exibido na UI (com ou sem "R$", separador de milhar).
+- `money.js` → `parseMoney(texto)` converte os formatos exibidos na tela:
+  - `"R$ 59,90"` → `59.9` · `"R$ 1.234,56"` → `1234.56`
+  - `"- R$ 20,00"` (desconto) → `20` (valor absoluto)
+  - `"Grátis"` (frete grátis) → `0`
+- `produtos.js` → mapa id → nome (`P001` → `Camiseta Essencial` …), usado para montar os `aria-label`. Os dados vêm da tabela do `CLAUDE.md`.
 - `config.js` → `BASE_URL`.
 - `api.hooks.js` → `Before({ tags: '@api' })` cria os clientes de API com `request.newContext({ baseURL, extraHTTPHeaders: { 'Content-Type': 'application/json' } })`; `After({ tags: '@api' })` faz `dispose()`.
-- Em falha de cenário `@ui`, anexe screenshot com `this.attach(await this.page.screenshot(), 'image/png')` (num `After` em arquivo próprio, sem mexer no `world.js`).
+- `evidence.hooks.js` → num `After` para cenários `@ui` (arquivo próprio, sem mexer no `world.js`):
+  - sempre que o cenário **falhar** ou tiver tag `@bug-XX`, tire `page.screenshot({ fullPage: true })`, anexe ao relatório com `this.attach(..., 'image/png')` e salve em `docs/05-evidencias/automacao/<CT-XX>_<status>.png`;
+  - o ID vem da tag `@CT-XX` do cenário (`pickle.tags`).
+  Assim cada execução gera a evidência do bug sem print manual.
 
 ## 6. Escrevendo cenários
 - Toda tag de cenário: `@CT-XX @CAXX @ui|@api @manual|@automatizado`.
@@ -172,7 +231,7 @@ module.exports = CartPage
 - `Scenario Outline` + `Examples` quando só os dados mudam (ex.: variações de maiúsculas e espaços do cupom, CEPs inválidos).
 - Sempre que a regra valer para UI e API, crie um cenário de cada camada.
 - Não crie cenário que trate como defeito algo listado em "NÃO é bug" no `CLAUDE.md`.
-- Ambiguidade: escreva com a interpretação adotada, coloque `# Interpretação: ...` acima do cenário e registre em `docs/01-plano-de-teste.md` (seção Interpretações).
+- Ambiguidade: escreva com a interpretação adotada, coloque `# Interpretação: ...` acima do cenário e registre em `docs/00-exploracao.md` (seção "Análise da documentação", como um novo item DOC-XX).
 
 ```gherkin
 Feature: Frete grátis
@@ -182,7 +241,7 @@ Feature: Frete grátis
 
   @CT-24 @CA08 @ui @automatizado
   Scenario: Frete continua grátis quando o cupom deixa o valor abaixo de R$ 200,00
-    Given I have "P005" with quantity 2 in the cart
+    Given I have "P005" with quantity 2 in the cart       # clica N vezes em "Adicionar ao carrinho" na vitrine
     When I apply the coupon "BEMVINDO10"
     Then the subtotal should be "200.00"
     And the discount should be "20.00"
@@ -213,7 +272,6 @@ Feature: Frete grátis
 - Tabela: ID | cenário | regra | camada | manual/automatizado | resultado.
 - Interpretações adotadas.
 - Bugs encontrados (ID e título).
-- Marcadores ⚠️ AJUSTAR que continuam pendentes.
 
 ## Não fazer
 - `expect` em Page Object ou cliente de API

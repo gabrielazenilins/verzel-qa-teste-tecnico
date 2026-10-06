@@ -1,0 +1,332 @@
+# Exploração manual — Verzel Store
+
+Antes de escrever os cenários, naveguei pela loja como um cliente para entender como ela funciona, anotar os elementos que vou usar na automação e ver se algo já quebrava de cara.
+
+- **Data:** 06/10/2026
+- **Navegador:** ____________ (Windows), com o DevTools aberto na aba Network
+- **Versão testada:** card VZS-142, v2.3.0
+
+Os prints estão em `docs/05-evidencias/exploracao/` e os bugs, detalhados em [04-bugs.md](04-bugs.md). No fim do arquivo está a análise da documentação, com as inconsistências que encontrei e a interpretação que adotei em cada uma.
+
+**O que encontrei, em resumo:** quase tudo se comportou como a documentação descreve. O problema principal está no frete: com subtotal de exatamente R$ 200,00, a loja ainda cobra R$ 19,90 (BUG-01). Também anotei um problema de layout no celular (BUG-02), que fica fora do escopo do card, e algumas observações.
+
+---
+
+## 1. Vitrine
+
+- A vitrine fica em `/` e a aba se chama "Produtos | Verzel Store".
+- Os 8 produtos aparecem com nomes e preços iguais aos da documentação.
+- Não dá para escolher a quantidade na vitrine. Cada clique em "Adicionar ao carrinho" soma 1 unidade, e o card avisa quantas já estão no carrinho ("3 no carrinho").
+- Ao chegar a 5 unidades pela vitrine, o botão "Adicionar ao carrinho" daquele produto fica desabilitado e o card mostra "Limite de 5 unidades atingido.". Então o limite do CA10 também vale aqui, não só no carrinho.
+- O contador do cabeçalho soma as unidades, não os produtos: com 3 camisetas, ele mostra 3.
+- Não há `data-testid` na página. Para identificar cada produto, o card tem `id="nome-P00X"` no título e `id="aviso-P00X"` no aviso.
+
+## 2. Carrinho
+
+- Fica em `/carrinho`. Com o carrinho vazio, aparece "Seu carrinho está vazio" e um botão "Ver produtos".
+- O resumo mostra Subtotal, Desconto, Frete e Total, e abaixo o aviso "Faltam R$ X para o frete grátis.".
+- Formatos na tela: `R$ 59,90`; o desconto aparece como `- R$ 20,00`; e quando o frete é grátis o valor vira a palavra `Grátis`.
+- A quantidade muda pelos botões − e +. Para tirar um item, uso "Remover". Também existe "Esvaziar carrinho".
+- Cada mudança no carrinho dispara `POST /api/carrinho/calcular`. Comparei a resposta da API com a tela em alguns casos e os valores bateram.
+- O carrinho continua lá depois de recarregar a página (F5), como a documentação diz.
+
+**Limite de 5 unidades (CA10):** cheguei a 5 unidades sem problema, tanto pela vitrine quanto pelo carrinho. Nesse ponto aparece "Limite de 5 unidades por produto." e o botão + fica desabilitado. O botão − também trava em 1. Na vitrine acontece o mesmo: o botão do produto trava e aparece "Limite de 5 unidades atingido.". Reparei que as duas mensagens são um pouco diferentes ("Limite de 5 unidades por produto." no carrinho e "Limite de 5 unidades atingido." na vitrine), mas as duas são claras. Não há campo para digitar a quantidade, então não consegui testar valores como 0, -1 ou 6 pela tela. Esses ficam para a API.
+
+## 3. Cupom (CA01 a CA05)
+
+O campo fica no carrinho, com o botão "Aplicar cupom". Usei P002 ×1 + P004 ×2 (subtotal R$ 239,70).
+
+| # | O que fiz | Esperado | O que aconteceu | Resultado |
+|---|---|---|---|---|
+| 3-01 | `BEMVINDO10` | desconto 23,97, frete grátis, total 215,73 | total 215,73 | OK |
+| 3-02 | `bemvindo10` | igual ao 3-01 | total 215,73 | OK |
+| 3-03 | `  BEMVINDO10  ` | igual ao 3-01 | total 215,73 | OK |
+| 3-04 | `BemVindo10` | igual ao 3-01 | total 215,73 | OK |
+| 3-05 | `XYZ123` | "Cupom inválido." | "Cupom inválido." | OK |
+| 3-06 | `VERAO2026` | "Cupom expirado." | "Cupom expirado." | OK |
+| 3-07 | `BEM VINDO10` | considerei inválido | "Cupom inválido." | OK |
+| 3-08 | campo vazio | não está na documentação | "Informe um cupom." | Observação |
+| 3-09 | tentar outro cupom com um já aplicado | só um por vez | o campo some e aparece "Cupom BEMVINDO10 aplicado." com "Remover cupom" | OK |
+| 3-10 | remover o cupom | volta para 239,70 | voltou | OK |
+| 3-11 | `XYZ123` e depois `BEMVINDO10` | erro some e o desconto entra | funcionou | OK |
+
+O cupom continua aplicado depois do F5. Também removi a calça com o cupom aplicado e o desconto foi recalculado: subtotal 99,80, desconto 9,98, frete 19,90, total 109,72 e "Faltam R$ 100,20 para o frete grátis.".
+
+## 4. Frete grátis (CA06 a CA09)
+
+| # | Carrinho | Cupom | Esperado | O que aconteceu | Resultado |
+|---|---|---|---|---|---|
+| 4-01 | P005 ×2 (R$ 200,00) | — | frete grátis, total 200,00 | frete 19,90, total 219,90 e "Faltam R$ 0,00 para o frete grátis." | **Falhou — BUG-01** |
+| 4-02 | P005 + P008 + P004 (R$ 199,90) | — | frete 19,90, faltam 0,10 | igual | OK |
+| 4-03 | P001 + P002 (R$ 199,80) | — | frete 19,90, faltam 0,20 | igual | OK |
+| 4-04 | P005 ×2 (R$ 200,00) | BEMVINDO10 | desconto 20,00, frete grátis, total 180,00 | frete 19,90, total 199,90 e "Faltam R$ 0,00" | **Falhou — BUG-01** |
+| 4-05 | P005 ×1 | BEMVINDO10 | desconto 10,00 só nos produtos, total 109,90 | igual | OK |
+| 4-06 | P007 ×1 (R$ 229,90) | — | frete grátis | igual | OK |
+| 4-07 | P006 ×1 (R$ 29,90) | — | frete 19,90, faltam 170,10 | igual | OK |
+| 4-08 | P001 + P004 + P005 (R$ 209,80) | — | frete grátis | frete "Grátis" e o aviso de valor faltante some | OK |
+| 4-09 | P001 + P004 + P005 (R$ 209,80) | BEMVINDO10 | desconto 20,98, frete grátis, total 188,82 | igual | OK |
+
+O frete grátis funciona acima de R$ 200,00, e o caso 4-09 confirma o CA08: mesmo com o total caindo para R$ 188,82 depois do desconto, o frete continua grátis. O erro aparece só no valor exato de R$ 200,00. Abri a resposta da API no Network e ela já vem com `"frete": 19.9` e `"freteGratis": false`, então o problema está no cálculo da API, não na tela. Parece uma comparação "maior que" onde deveria ser "maior ou igual".
+
+Prints: `EXP-4-01_frete-200-payload.png`, `EXP-4-01_frete-200-response.png` e `EXP-4-04_frete-200-com-cupom.png`.
+
+## 5. Checkout
+
+- Chego pelo link "Finalizar compra" do carrinho. A rota é `/checkout`, com o título "Finalizar compra" e um link para voltar ao carrinho.
+- Campos: Nome completo, E-mail e CEP (com a dica "Somente números ou no formato 00000-000."). Logo abaixo: "O pagamento é feito na entrega."
+- O resumo repete os valores do carrinho e lista os itens (ex.: "5x Kit 3 Pares de Meias — R$ 149,50").
+- Não consegui chegar ao checkout com o carrinho vazio, porque o botão de finalizar não aparece.
+- As mensagens de erro só aparecem depois de clicar em "Confirmar pedido", e não ao sair de cada campo.
+
+| # | Campo | Digitei | Esperado | Mensagem | Resultado |
+|---|---|---|---|---|---|
+| 5-01 | Nome | `Maria` | erro | "Informe nome e sobrenome." | OK |
+| 5-02 | Nome | `Maria Silva` | aceito | aceito | OK |
+| 5-03 | Nome | vazio | erro | "Informe o nome completo." | OK |
+| 5-04 | Nome | só espaços | erro | "Informe o nome completo." | OK |
+| 5-05 | E-mail | `maria@` | erro | "Informe um e-mail válido." | OK |
+| 5-06 | E-mail | `maria.exemplo.com` | erro | "Informe um e-mail válido." | OK |
+| 5-07 | E-mail | `maria@exemplo.com` | aceito | aceito | OK |
+| 5-08 | CEP | `01310-100` | aceito | aceito | OK |
+| 5-09 | CEP | `01310100` | aceito | aceito | OK |
+| 5-10 | CEP | `0131010` | erro | "Informe um CEP com 8 dígitos." | OK |
+| 5-11 | CEP | `013101000` | erro | "Informe um CEP com 8 dígitos." | OK |
+| 5-12 | CEP | `ABCDE-FGH` | erro | "Informe um CEP com 8 dígitos." | OK |
+
+## 6. Confirmação
+
+Finalizei uma compra com P005 ×1, `BEMVINDO10` e os dados da Maria Silva.
+
+- A loja foi para `/pedido-confirmado` e mostrou "Pedido confirmado", o número **VZ-856317** e "Obrigado, Maria. Seu pedido foi registrado e o pagamento será feito na entrega.".
+- Os valores bateram: subtotal 100,00, desconto 10,00, frete 19,90, total 109,90.
+- No Network, `POST /api/pedidos` respondeu 201. O CEP voltou sem o hífen (`01310100`).
+- O carrinho foi esvaziado depois do pedido, e voltar no navegador leva ao carrinho vazio.
+- Cliquei duas vezes rápido em "Confirmar pedido" e só um pedido foi gerado.
+
+## 7. Cupom inválido até o fim
+
+Apliquei `VERAO2026` no carrinho. A API respondeu 200 com `"aplicado": false` e "Cupom expirado.", e o total ficou R$ 119,90, sem desconto. Ao seguir para o checkout, o cupom não foi junto, então pela interface não dá para chegar ao erro 422 que a documentação descreve para `/api/pedidos`. Vou testar esse caso direto na API.
+
+## 8. Geral
+
+- Os links do cabeçalho funcionam em todas as telas.
+- Não apareceu nenhum erro no Console.
+- Não vi erro de digitação nem valores com casas decimais estranhas.
+- **No celular:** simulando o Pixel 9 e modelos dobráveis no DevTools, o cabeçalho fica só com a marca e o Carrinho. Os links Produtos e Documentação somem e não há menu para acessá-los. Na largura do iPad Mini o cabeçalho volta ao normal. Registrei como BUG-02, de prioridade baixa, porque não faz parte da entrega de cupom e frete.
+
+---
+
+## Achados
+
+| ID | Tipo | O que é |
+|---|---|---|
+| BUG-01 | Bug (alta) | A API cobra frete com subtotal de exatamente R$ 200,00 (CA06) |
+| BUG-02 | Bug (baixa, fora do card) | O menu some em telas de celular |
+| OBS-01 | Observação | Cupom vazio mostra "Informe um cupom.", mensagem que não está na documentação |
+| OBS-02 | Observação | As validações do checkout só aparecem ao confirmar o pedido |
+| OBS-03 | Observação | O cupom inválido não chega ao checkout; o erro 422 de `/api/pedidos` só dá para testar pela API |
+| OBS-04 | Testabilidade | A página não tem `data-testid`; na automação vou usar `aria-label`, `id` e `data-valor` |
+
+## Observações em detalhe
+
+Nenhuma destas contradiz a documentação, por isso não registrei como bug. Mesmo assim, achei que valia anotar: algumas mostram lacunas na especificação e outras mudam a forma como vou testar.
+
+### OBS-01 — Cupom vazio mostra "Informe um cupom."
+
+**O que vi:** clicando em "Aplicar cupom" com o campo vazio, a loja não chama a API. Mostra direto "Informe um cupom." e marca o campo como inválido.
+
+**Por que anotei:** a documentação só fala de cupom inexistente ("Cupom inválido.") e expirado ("Cupom expirado."). O caso do campo vazio não aparece em lugar nenhum. O comportamento me pareceu correto, mas a regra foi decidida pelo desenvolvimento, não pela especificação.
+
+**O que fica em aberto:**
+- Um cupom só com espaços (`"   "`) deveria cair aqui ou em "Cupom inválido."? Pela regra do CA02, os espaços são ignorados, então o resultado seria um cupom vazio.
+- Pela API, como `/carrinho/calcular` responde a `"cupom": ""`? O campo é opcional, então o esperado seria tratar como se não houvesse cupom.
+
+**Como vou cobrir:** um cenário de UI para o campo vazio e um para só espaços, além de um cenário de API com `"cupom": ""`. A interpretação vai registrada no plano de teste.
+
+### OBS-02 — Validações do checkout só aparecem ao confirmar
+
+**O que vi:** posso preencher nome, e-mail e CEP errados e sair dos campos sem nenhum aviso. Os erros só aparecem quando clico em "Confirmar pedido", todos de uma vez.
+
+**Por que anotei:** a documentação não diz quando a validação deve acontecer, então não é bug. Mas, para quem compra, descobrir três erros só no fim é pior do que ser avisado campo a campo. Fica como sugestão de melhoria.
+
+**O que mais reparei:** a dica do CEP ("Somente números ou no formato 00000-000.") aparece desde o início, o que ajuda a evitar o erro. Ainda preciso ver se, ao corrigir um campo, a mensagem dele some sozinha ou só no próximo clique em "Confirmar pedido".
+
+**Como vou cobrir:** nos testes automatizados, preencher os campos e só verificar as mensagens depois de clicar em "Confirmar pedido". Se o teste esperar a mensagem antes do clique, ele falha mesmo com a loja funcionando como foi feita.
+
+### OBS-03 — O cupom inválido não chega ao checkout
+
+**O que vi:** apliquei `VERAO2026` no carrinho, recebi "Cupom expirado." e segui para o checkout. Lá o pedido aparece sem cupom e é confirmado normalmente.
+
+**Por que anotei:** a documentação diz que `/api/pedidos` deve responder 422 (`CUPOM_EXPIRADO` ou `CUPOM_INVALIDO`) quando recebe um cupom inválido. Pela tela, não existe caminho para isso acontecer, porque a interface só leva adiante o cupom que foi aceito. Isso é bom para o cliente, mas significa que essa regra da API não é exercitada pela UI.
+
+**O que fica em aberto:**
+- Se o cupom fosse válido no carrinho e expirasse antes da confirmação, a tela trataria o 422? Não dá para reproduzir com os dados fixos do ambiente.
+- Não verifiquei o que o checkout envia para a API quando há um cupom válido aplicado. *(conferir o payload de `POST /api/pedidos` no Network)*
+
+**Como vou cobrir:** cenários direto na API, enviando `VERAO2026` e um cupom inexistente para `/api/pedidos` (espero 422 com o código certo), e os mesmos cupons para `/carrinho/calcular` (espero 200 sem desconto). Assim a diferença de comportamento entre os dois endpoints fica testada.
+
+### OBS-04 — Sem `data-testid`
+
+**O que vi:** nenhum elemento da loja tem `data-testid`. Por outro lado, quase tudo tem um gancho estável:
+- os botões têm `aria-label` descritivos, como "Aumentar quantidade de Camiseta Essencial" e "Remover Camiseta Essencial do carrinho";
+- os valores do resumo têm `data-valor="subtotal"`, `"desconto"`, `"frete"` e `"total"`;
+- os campos têm `id` (`campo-cupom`, `campo-nome`, `campo-email`, `campo-cep`), e as mensagens de erro também (`campo-cep-erro`).
+
+**O ponto fraco:** o botão "Adicionar ao carrinho" é igual em todos os cards, sem `id` nem `aria-label` próprio. Para clicar no produto certo, preciso primeiro achar o card pelo título (`#nome-P002`) e depois procurar o botão dentro dele. Funciona, mas quebra se a estrutura do card mudar. Um `aria-label="Adicionar Calça Jeans Slim ao carrinho"` resolveria e ainda ajudaria leitores de tela.
+
+**Outro detalhe:** os `aria-label` usam o nome do produto, não o id. Se um nome mudar, os seletores mudam junto. Na automação, centralizei a conversão id → nome num único arquivo, para não espalhar nomes pelo código.
+
+### Sugestões de melhoria
+
+Nada aqui é bug, nem faz parte do card VZS-142. São ideias que surgiram enquanto eu usava a loja como cliente. Deixo registradas para o time avaliar.
+
+| ID | Onde | Sugestão | Por quê |
+|---|---|---|---|
+| MEL-01 | Checkout, campo CEP | Link "Não sei meu CEP" abrindo a busca dos Correios (buscacepinter.correios.com.br) em outra aba | Quem não lembra o CEP precisa sair da loja para procurar e pode desistir da compra. Um atalho resolve sem nenhuma integração nova. |
+| MEL-02 | Checkout, endereço | Mostrar rua, bairro e cidade a partir do CEP digitado | Hoje o checkout pede só o CEP, sem endereço. Mostrar o endereço encontrado ajuda o cliente a perceber um CEP digitado errado antes de confirmar. |
+| MEL-03 | Checkout, validações | Validar cada campo ao sair dele, e não só em "Confirmar pedido" (ver OBS-02) | O cliente descobre o erro na hora, campo a campo, em vez de receber três mensagens de uma vez no fim. |
+| MEL-04 | Vitrine | `aria-label` próprio no botão de cada produto, como "Adicionar Calça Jeans Slim ao carrinho" (ver OBS-04) | Leitores de tela hoje ouvem oito botões iguais. Também deixaria a automação mais simples e estável. |
+| MEL-05 | Cabeçalho no celular | Menu recolhível (ícone ☰) com Produtos e Documentação (ver BUG-02) | Mantém o acesso às páginas sem ocupar espaço em telas pequenas. |
+| MEL-06 | Carrinho, frete | Mensagem positiva ao atingir o frete grátis, como "Você ganhou frete grátis!" | Hoje o aviso "Faltam R$ X" só desaparece. O cliente pode nem perceber que ganhou o benefício. |
+| MEL-07 | Carrinho, resumo | Linha "Você economizou R$ X" somando o desconto do cupom e o frete grátis | Junta os dois benefícios da entrega num número só, que é o objetivo da história: pagar menos. |
+| MEL-08 | Carrinho, cupom | Mostrar a mensagem que a API já devolve ("Cupom aplicado: 10% de desconto nos produtos.") em vez de só "Cupom BEMVINDO10 aplicado." | Deixa claro que o desconto vale só para os produtos (CA09) e evita a dúvida "por que o frete continua sendo cobrado?". Ver DOC-02. |
+
+### Para conferir antes de entregar
+- [ ] OBS-01: testar cupom só com espaços e `"cupom": ""` na API
+- [ ] OBS-02: confirmar se a mensagem de erro some ao corrigir o campo
+- [ ] OBS-03: ver no Network o payload de `POST /api/pedidos` com cupom válido
+- [ ] "Esvaziar carrinho": ver se pede confirmação antes de apagar tudo (se não pedir, vira sugestão de melhoria)
+
+---
+
+## Análise da documentação
+
+Além de explorar a loja, li a documentação inteira procurando trechos que se contradizem, regras que faltam e pontos que podem ser lidos de mais de um jeito. O teste técnico pede que, nesses casos, eu registre a minha interpretação e siga em frente. É o que está abaixo.
+
+Separei em três grupos:
+- **Inconsistências:** a documentação diz coisas diferentes em lugares diferentes.
+- **Lacunas:** a regra não existe, e o comportamento fica a critério de quem implementa.
+- **Pontos difíceis de testar:** a regra existe, mas os dados do ambiente não permitem exercitá-la por completo.
+
+Cada item termina com a interpretação que adotei e como pretendo testar.
+
+---
+
+### Inconsistências
+
+#### DOC-01 — Erro de dados do cliente: `campo` ou `campos`?
+- **Formato geral de erro:** `{ "erro": { "codigo", "mensagem", "campo" } }`, com `campo` no singular e como texto (ex.: `"itens[0].quantidade"`).
+- **Linha do `DADOS_INVALIDOS`:** "Os detalhes vêm em **"campos"**", no plural.
+- **Problema:** não fica claro se esse erro tem um formato diferente (uma lista em `campos`), se usa o mesmo `campo` de sempre, ou se traz os dois. Quem consome a API não sabe onde ler os detalhes.
+- **Interpretação:** o `DADOS_INVALIDOS` traz uma lista em `erro.campos` com os campos inválidos, e os demais erros usam `erro.campo`.
+- **Teste:** enviar um pedido com nome, e-mail e CEP inválidos e registrar a estrutura real da resposta. Se vier diferente do documentado, entra como divergência de documentação.
+
+#### DOC-02 — "A interface apenas exibe o resultado", mas as mensagens são outras
+- **Documentação:** "Os cálculos são feitos pela API e a interface apenas exibe o resultado."
+- **Exploração:** com o cupom aceito, a API devolve `"mensagem": "Cupom aplicado: 10% de desconto nos produtos."`, mas a tela mostra "Cupom BEMVINDO10 aplicado.". A tela também mostra "Informe um cupom." para o campo vazio, sem chamar a API.
+- **Problema:** a interface tem textos e validações próprias, que não estão documentados em lugar nenhum.
+- **Interpretação:** os **valores** vêm da API e devem bater sempre. Os **textos** de sucesso e as validações locais são decisão da interface. Só cobro texto exato quando a documentação o define ("Cupom inválido.", "Cupom expirado.").
+
+#### DOC-03 — O CEP é normalizado sem aviso
+- **Exemplo de `POST /api/pedidos`:** a requisição envia `"cep": "01310-100"` e a resposta devolve `"cep": "01310100"`.
+- **Problema:** nenhuma regra fala dessa normalização. Ela só aparece no exemplo.
+- **Interpretação:** é esperado. O CEP é aceito com ou sem hífen e devolvido só com números.
+- **Teste:** enviar as duas formas e verificar que a resposta vem nos dois casos como `01310100`.
+
+#### DOC-04 — `PRODUTO_NAO_ENCONTRADO` com dois status
+- **Tabela de erros:** o mesmo código aparece como **404** (consulta `GET /api/produtos/{id}`) e como **422** (item de carrinho ou pedido com produto inexistente).
+- **Problema:** não está errado, mas quem trata erros pelo código precisa saber que o status muda conforme o endpoint.
+- **Interpretação:** está correto como documentado.
+- **Teste:** um cenário para cada caso, validando código e status juntos.
+
+#### DOC-05 — Exemplos incompletos
+- No exemplo de `POST /api/pedidos`, aparecem `"itens": [ ... ]` e `"mensagem": "..."`.
+- O campo `total` de cada item aparece no exemplo de `/carrinho/calcular`, mas não há regra dizendo como ele é calculado.
+- **Interpretação:**
+  - `itens[].total = precoUnitario × quantidade`, arredondado em 2 casas (CA11);
+  - os itens e a mensagem do cupom em `/pedidos` seguem o mesmo formato de `/carrinho/calcular` ("o mesmo resumo de valores").
+- **Teste:** comparar campo a campo a resposta de `/pedidos` com a de `/carrinho/calcular` para o mesmo carrinho.
+
+---
+
+### Lacunas
+
+#### DOC-06 — Cupom vazio ou só com espaços
+- **Documentação:** só cobre cupom inexistente e expirado. O campo `cupom` é opcional na API.
+- **Faltam:** o caso `"cupom": ""` e o caso `"cupom": "   "`, que, pelo CA02, vira vazio depois de tirar os espaços.
+- **Interpretação:** na API, cupom vazio ou só com espaços conta como "sem cupom" (sem erro, sem desconto, `cupom` nulo ou não aplicado). Na tela, "Informe um cupom." (comportamento observado).
+- **Teste:** um cenário de API para cada caso e um de UI para o campo vazio.
+
+#### DOC-07 — O CA02 vale também para a API?
+- **CA02:** "O código do cupom não diferencia maiúsculas de minúsculas, e espaços no início e no fim são ignorados."
+- **Problema:** não diz se a regra é da tela, da API ou das duas. Na exploração, a API recebeu `"verao2026"` e devolveu `"codigo": "VERAO2026"`, o que sugere que a API normaliza.
+- **Interpretação:** vale para as duas, porque "os cálculos são feitos pela API".
+- **Teste:** enviar `" bemvindo10 "` direto para `/carrinho/calcular` e para `/pedidos`.
+
+#### DOC-08 — Regras de nome e e-mail pouco definidas
+- **Documentação:** "nome e sobrenome" e "formato válido", sem detalhes.
+- **Casos sem resposta:**
+  - nome com espaço duplo (`Maria  Silva`);
+  - sobrenome com uma letra (`Maria S`);
+  - nomes com acento ou hífen (`José Ávila`, `Ana-Clara Souza`);
+  - e-mail com `+` ou subdomínio (`maria+loja@exemplo.com.br`).
+- **Interpretação:**
+  - nome válido tem pelo menos duas palavras com letras, aceitando acento e hífen;
+  - e-mail segue o formato comum `texto@dominio.ext`.
+- **Teste:** um `Scenario Outline` com esses exemplos. Qualquer comportamento diferente entra como observação, não como bug, porque a regra não está definida.
+
+#### DOC-09 — Mensagens de erro do checkout não documentadas
+- **Na tela:** "Informe nome e sobrenome.", "Informe o nome completo.", "Informe um e-mail válido." e "Informe um CEP com 8 dígitos."
+- **Na documentação:** nenhuma dessas mensagens, nem o texto que a API devolve em `DADOS_INVALIDOS`.
+- **Interpretação:** os textos observados viram a referência dos testes, marcados como "comportamento observado". Se mudarem, o teste quebra, mas isso não é necessariamente um bug.
+
+#### DOC-10 — Requisição sem `Content-Type: application/json`
+- **Documentação:** "Envie e receba sempre JSON, com o cabeçalho `Content-Type: application/json`."
+- **Falta:** dizer o que acontece se o cabeçalho não for enviado. Não há código de erro para isso na tabela.
+- **Interpretação:** só registro o comportamento observado, sem classificar como bug.
+- **Teste:** uma chamada a `/carrinho/calcular` sem o cabeçalho, com corpo JSON válido.
+
+#### DOC-11 — Métodos aceitos por rota
+- **Documentação:** `405 METODO_NAO_PERMITIDO` para "rota existe, mas não aceita o método".
+- **Falta:** a lista de métodos aceitos não é explícita. Deduzi pelos exemplos: `GET` nos produtos e `POST` no carrinho e nos pedidos.
+- **Teste:** `GET /api/carrinho/calcular`, `GET /api/pedidos` e `POST /api/produtos`, esperando 405.
+
+---
+
+### Pontos difíceis de testar
+
+#### DOC-12 — O arredondamento (CA11) quase nunca é exercitado
+- **CA11:** "Todos os valores são arredondados para 2 casas decimais." A documentação não diz o método (para cima, para baixo ou meio para cima).
+- **Problema:** todos os preços terminam em ,90 ou ,00, e o único cupom válido é de 10%. Com isso, o desconto sempre fecha em no máximo 2 casas (ex.: 239,70 → 23,97). Não existe combinação de produtos que gere uma terceira casa para arredondar.
+- **O que ainda dá para testar:** o risco real é de **ponto flutuante**. Em JavaScript, `239.7 * 0.1` dá `23.970000000000002`. Então verifico que a API devolve exatamente `23.97`, e não um número com sujeira nas casas decimais.
+- **Interpretação:** o CA11 é coberto pela verificação de que todos os valores numéricos da resposta têm no máximo 2 casas decimais.
+
+#### DOC-13 — Validade do cupom expirado
+- **Documentação:** `VERAO2026` está "Expirado em 31/03/2026". Não há regra de início ou fim de validade, nem de fuso horário.
+- **Problema:** como os cupons são fixos, não dá para testar o limite (último dia válido × primeiro dia expirado).
+- **Interpretação:** só verifico o comportamento de um cupom já expirado. O limite de data fica registrado como não testável neste ambiente.
+
+#### DOC-14 — Erro 422 de cupom em `/pedidos` não é alcançável pela tela
+- Detalhado na OBS-03, acima: a interface não leva cupom inválido para o checkout.
+- **Teste:** só pela API.
+
+---
+
+### Resumo
+
+| ID | Tipo | Assunto | Interpretação adotada |
+|---|---|---|---|
+| DOC-01 | Inconsistência | `campo` × `campos` em `DADOS_INVALIDOS` | lista em `erro.campos`; conferir a resposta real |
+| DOC-02 | Inconsistência | Interface com textos próprios | valores vêm da API; textos só onde a documentação define |
+| DOC-03 | Inconsistência | CEP normalizado sem regra | aceito com ou sem hífen, devolvido só com números |
+| DOC-04 | Inconsistência | Mesmo código com 404 e 422 | correto; testar código e status juntos |
+| DOC-05 | Inconsistência | Exemplos com `...` | mesmo formato de `/carrinho/calcular` |
+| DOC-06 | Lacuna | Cupom vazio ou só espaços | conta como "sem cupom" na API |
+| DOC-07 | Lacuna | CA02 na API | vale para a tela e para a API |
+| DOC-08 | Lacuna | Regras de nome e e-mail | duas palavras com letras; formato comum de e-mail |
+| DOC-09 | Lacuna | Mensagens do checkout | textos observados como referência |
+| DOC-10 | Lacuna | Sem `Content-Type` | registrar o comportamento |
+| DOC-11 | Lacuna | Métodos por rota | deduzidos dos exemplos; testar o 405 |
+| DOC-12 | Difícil de testar | Arredondamento | verificar ponto flutuante e no máximo 2 casas |
+| DOC-13 | Difícil de testar | Data de validade | limite de data não testável |
+| DOC-14 | Difícil de testar | 422 de cupom em `/pedidos` | só pela API |

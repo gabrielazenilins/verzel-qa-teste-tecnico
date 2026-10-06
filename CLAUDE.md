@@ -5,7 +5,7 @@
 - API: mesma URL, caminho `/api`, sempre JSON (`Content-Type: application/json`). Valores monetários são números em reais (`59.9` = R$ 59,90).
 - URL base em um único lugar: `process.env.BASE_URL` com fallback para a URL acima (`support/config.js`).
 - Funcionalidade em teste: card **VZS-142**, versão 2.3.0 — cupom de desconto e frete grátis.
-- Documentação de referência: `docs/referencias/documentacao-v2.3.0.pdf` (ler antes de levantar cenários).
+- Documentação de referência: `docs/referencias/documentacao-v2.3.0.md` (transcrição em texto; ler antes de levantar cenários). O original é `docs/referencias/documentacao-v2.3.0.pdf` (PDF só com imagem, sem texto selecionável); consulte-o apenas para tirar dúvida sobre a transcrição.
 
 ## Regras (resumo da documentação; em caso de dúvida, vale o PDF)
 - CA01 `BEMVINDO10` = 10% sobre o subtotal dos produtos.
@@ -56,4 +56,4 @@ Login, cadastro, pagamento online, consulta de pedidos, testes de carga, estress
 - Tags: `@CT-XX` (ID do cenário), `@CAXX` (critério), `@ui`/`@api`, `@manual`/`@automatizado`, `@bug-XX` quando falhar por defeito.
 - Valores exibidos na UI ("R$ 1.234,56") são convertidos para número com o helper `support/money.js` antes de comparar.
 - Cenários: `features/`; execução e evidências: `docs/`; bugs: `docs/04-bugs.md`.
-- Ambiguidades registradas em `docs/01-plano-de-teste.md` (seção Interpretações).
+- Ambiguidades registradas em `docs/00-exploracao.md` (seção "Análise da documentação", itens DOC-XX).

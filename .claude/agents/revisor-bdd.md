@@ -32,7 +32,7 @@ Se o comando falhar por falta de dependências, diga isso e siga com a revisão 
 - **Valores esperados corretos:** recalcule subtotal, desconto, frete, valor faltante e total de cada cenário usando os preços e regras do `CLAUDE.md`. Valor esperado errado é gravidade Alta.
 - Mensagens esperadas idênticas à documentação, inclusive a pontuação ("Cupom inválido.", "Cupom expirado.").
 - Cenário que trata como defeito algo listado em "NÃO é bug", ou que testa algo fora de escopo (carga, estresse, segurança, login, pagamento online, consulta de pedidos).
-- `# Interpretação:` presente em cenários baseados em ambiguidade, e registrada em `docs/01-plano-de-teste.md`.
+- `# Interpretação:` presente em cenários baseados em ambiguidade, e registrada em `docs/00-exploracao.md` (seção "Análise da documentação").
 
 **Steps (`steps/`)**
 - O `expect` fica só nos steps; todo `Then` tem verificação.
@@ -80,7 +80,7 @@ Compare com o checklist do teste técnico:
 - [ ] Os arquivos de evidência citados existem em `docs/05-evidencias/`
 - [ ] Pelo menos 3 cenários `@automatizado`
 - [ ] README explica como instalar e rodar a automação e onde encontrar cada entrega
-- [ ] `docs/01-plano-de-teste.md` tem premissas, fora de escopo e interpretações
+- [ ] `docs/00-exploracao.md` tem a exploração, as observações e a análise da documentação com as interpretações
 
 ## 8. Como responder
 1. O que foi revisado (arquivos e modo).
