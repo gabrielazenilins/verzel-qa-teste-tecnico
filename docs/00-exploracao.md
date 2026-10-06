@@ -3,7 +3,7 @@
 Antes de escrever os cenários, naveguei pela loja como um cliente para entender como ela funciona, anotar os elementos que vou usar na automação e ver se algo já quebrava de cara.
 
 - **Data:** 06/10/2026
-- **Navegador:** ____________ (Windows), com o DevTools aberto na aba Network
+- **Navegador:** Google Chrome (Versão 154.0.8037.98 Windows), com o DevTools aberto na aba Network
 - **Versão testada:** card VZS-142, v2.3.0
 
 Os prints estão em `docs/05-evidencias/exploracao/` e os bugs, detalhados em [04-bugs.md](04-bugs.md). No fim do arquivo está a análise da documentação, com as inconsistências que encontrei e a interpretação que adotei em cada uma.
