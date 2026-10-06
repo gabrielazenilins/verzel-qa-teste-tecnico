@@ -1,0 +1,17 @@
+{
+  "name": "verzel-store-testes",
+  "version": "1.0.0",
+  "description": "Teste técnico QA Júnior Verzel (VZS-142): cenários BDD da Verzel Store com Playwright + Cucumber",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "test": "cucumber-js",
+    "test:ui": "cucumber-js --tags \"@ui and not @manual\"",
+    "test:api": "cucumber-js --tags \"@api and not @manual\"",
+    "postinstall": "playwright install chromium"
+  },
+  "devDependencies": {
+    "@cucumber/cucumber": "^13.3.0",
+    "@playwright/test": "^1.63.0"
+  }
+}
