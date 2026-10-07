@@ -28,7 +28,7 @@ Legenda: ✅ passou · ❌ falhou por bug · "3 nav." = Chromium, Firefox e WebK
 | E-mail válido | CT-61 · email | CT-63 | ✅ UI (3 nav.) e API | — |
 | CEP com 8 dígitos, com ou sem hífen | CT-61 · cep 7 dígitos, CT-61 · cep 9 dígitos | CT-62 · 01310-100, CT-62 · 01310100 (CEP normalizado, DOC-03) | ✅ UI (3 nav.) e API | — |
 | Pedido confirmado com número `VZ-` + 6 dígitos | CT-60 | CT-62 | ✅ UI (3 nav.) e API | — |
-| Pagamento na entrega | — | — | Não coberto: a loja não tem etapa de pagamento; fora dos cenários críticos | — |
+| Pagamento na entrega | CT-60 (texto "o pagamento será feito na entrega" na confirmação) | — | ✅ UI (3 nav.) | — |
 
 ## Contrato da API (seção "API" e tabela de códigos de erro)
 
@@ -40,9 +40,9 @@ Legenda: ✅ passou · ❌ falhou por bug · "3 nav." = Chromium, Firefox e WebK
 
 ## Resumo
 
-- **Regras cobertas:** 18 de 19.
+- **Regras cobertas:** 19 de 19.
   - CA01 a CA11: 11 de 11.
-  - Regras da loja: 4 de 5. "Pagamento na entrega" fica sem cenário, porque a loja não tem etapa de pagamento.
+  - Regras da loja: 5 de 5. Como não há etapa de pagamento, o "pagamento na entrega" é verificado pelo texto da confirmação (CT-60).
   - Contrato da API: 3 de 3.
 - **Cenários:** 26 (10 de UI e 16 de API), que somam 56 execuções por causa dos exemplos de `Scenario Outline`: 14 de UI e 42 de API.
 - **Rodadas:** 84 (as 14 de UI × 3 navegadores + as 42 de API no Chromium).

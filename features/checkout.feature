@@ -21,6 +21,7 @@ Feature: Checkout e confirmação do pedido
     And the discount should be "10.00"
     And the shipping should be "19.90"
     And the total should be "109.90"
+    And I should see that the payment will be made on delivery
     And the cart should be empty
 
   # Interpretação (DOC-09): as mensagens não estão na documentação; os textos observados na exploração

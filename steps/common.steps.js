@@ -298,6 +298,11 @@ Then('I should see the order confirmation with a number in the format VZ-000000'
     await expect(this.pages.confirmation.orderNumber).toHaveText(/^VZ-\d{6}$/)
 })
 
+// Regra da loja: pagamento na entrega (texto da confirmação observado na exploração, seção 6).
+Then('I should see that the payment will be made on delivery', async function(){
+    await expect(this.pages.confirmation.paymentOnDelivery).toBeVisible()
+})
+
 // Sem navegar num Then: o contador do cabeçalho mostra o total de unidades no carrinho.
 Then('the cart should be empty', async function(){
     await expect(this.pages.header.cartCounter).toHaveText('0')
