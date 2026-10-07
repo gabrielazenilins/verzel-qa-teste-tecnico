@@ -1,4 +1,7 @@
 # Contexto de testes — Verzel Store (teste técnico QA Júnior)
+## Idioma
+- Responda sempre em português do Brasil, inclusive resumos, perguntas e relatórios de revisão.
+- Mensagens de commit também em português. 
 
 ## Sistema sob teste
 - Loja: https://verzel-store.qa-test-verzel-store.workers.dev/
