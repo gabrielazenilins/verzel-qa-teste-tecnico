@@ -7,6 +7,7 @@ Este repositório é a minha entrega do teste técnico de QA Júnior da Verzel. 
 - **26 cenários** (10 de UI e 16 de API), que somam **56 execuções** por causa dos exemplos de `Scenario Outline`.
 - **Navegadores:** a UI rodou em **Chromium, Firefox e WebKit**; a API, que não depende de navegador, rodou uma vez pelo Chromium.
 - **84 rodadas: 76 passaram e 8 falharam**, todas por bug registrado. Nenhuma falha ficou sem explicação.
+- **Execução manual:** os 14 exemplos de UI também têm resultado manual no Google Chrome 154 (12 pela exploração e 2 executados à mão, com GIF): 13 passaram e o CT-20 falhou pelo BUG-01. Detalhes em [Execução manual — Google Chrome 154](docs/03-execucao.md#execução-manual--google-chrome-154).
 
 ### Bugs encontrados
 

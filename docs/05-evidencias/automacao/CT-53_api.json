@@ -7,7 +7,7 @@
     "@automatizado",
     "@bug-03"
   ],
-  "executadoEm": "2026-10-07T22:01:47.932Z",
+  "executadoEm": "2026-10-07T22:30:08.505Z",
   "falha": {
     "mensagem": "Error: status HTTP",
     "esperado": "422",
@@ -34,8 +34,8 @@
       },
       "status": 201,
       "resposta": {
-        "numero": "VZ-596859",
-        "criadoEm": "2026-10-07T22:01:48.532Z",
+        "numero": "VZ-510988",
+        "criadoEm": "2026-10-07T22:30:09.055Z",
         "cliente": {
           "nome": "Maria Silva",
           "email": "maria@exemplo.com",
