@@ -1,8 +1,8 @@
 # Execução
 
-Status: **Passou** (resultado igual ao esperado) · **Falhou** (o sistema respondeu diferente do esperado; vira bug) · **Bloqueado** (não foi possível executar). "—" = ainda não executado.
+Status: **Passou** (resultado igual ao esperado) · **Falhou** (o sistema respondeu diferente do esperado; vira bug) · **Bloqueado** (não foi possível executar). "—" = não executado; nas colunas Firefox e WebKit das linhas de API, "—" quer dizer "não se aplica" (a API roda só no Chromium).
 
-Colunas Chromium, Firefox e WebKit: resultado em cada navegador, na execução de 07/10/2026 (`npm run test:all`). Os cenários de UI rodaram nos três navegadores. Os de API não dependem de navegador e rodam uma vez, pelo Chromium; por isso ficam com "—" no Firefox e no WebKit. Os caminhos de evidência são relativos a `docs/05-evidencias/`.
+Colunas Chromium, Firefox e WebKit: resultado em cada navegador, na execução de 07/10/2026 (`npm run test:all`). Os cenários de UI rodaram nos três navegadores. Os de API não dependem de navegador e rodam uma vez, pelo Chromium; por isso ficam com "—" no Firefox e no WebKit. Os caminhos de evidência são relativos a `docs/05-evidencias/`. Os relatórios completos dessa execução, um por navegador, estão em [05-evidencias/automacao/relatorios/](05-evidencias/automacao/relatorios/): `cucumber-report-chromium.html`, `cucumber-report-firefox.html` e `cucumber-report-webkit.html`. Eles são a evidência das linhas que passaram.
 
 Nos `Scenario Outline`, cada exemplo tem a sua linha (ex.: `CT-24 · 199,90`), para cada resultado ter evidência própria.
 

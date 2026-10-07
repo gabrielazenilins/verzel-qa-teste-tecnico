@@ -31,10 +31,11 @@ Também não repito o mesmo teste nas duas camadas: a **API** cobre as regras e 
 A documentação diz que "os cálculos são feitos pela API e a interface apenas exibe o resultado". Por isso divido assim:
 
 - **API, onde ficam as regras de valor.** É aqui que testo com mais profundidade os valores-limite do frete, o desconto, a fórmula e o arredondamento. Comparo números exatos, o que também pega erro de ponto flutuante (DOC-12). Também ficam só na API os casos que a tela não deixa reproduzir: quantidades 0, negativas ou acima de 5 (a tela só tem botões + e −), o 422 de cupom em `/pedidos` (DOC-14), a normalização do CEP (DOC-03) e todos os códigos de erro.
-- **UI, onde fica o comportamento da tela.** Aqui cubro o que só existe na tela: a mensagem do cupom, o cupom aplicado com o botão "Remover cupom" (CA05), o aviso "Faltam R$ X para o frete grátis.", os botões + e − travando em 5 e em 1, as mensagens do checkout e a confirmação. Para os valores, verifico se a tela mostra o que a API calculou em alguns casos representativos, sem repetir todas as combinações.
-- **Nas duas camadas:** CA01, CA03/CA04, o limite de R$ 200,00 do CA06 e o CA10. O CA02, o CA08 e o CA09 ficam só na API, porque são regras de valor; o CA05 fica só na UI, porque é o comportamento do campo de cupom. São as regras centrais do card, e um defeito em qualquer uma das camadas chega ao cliente.
+- **UI, onde fica o comportamento da tela.** Aqui cubro o que só existe na tela: a mensagem do cupom, o cupom aplicado com o botão "Remover cupom" (CA05), o aviso "Faltam R$ X para o frete grátis.", o botão + travando em 5 (o − travando em 1 ficou coberto pela exploração, seção 2), as mensagens do checkout e a confirmação. Para os valores, verifico se a tela mostra o que a API calculou em alguns casos representativos, sem repetir todas as combinações.
+- **Nas duas camadas:** CA01, CA03/CA04, CA06 (incluindo o limite de R$ 200,00), CA07 e CA10. São as regras centrais do card, e um defeito em qualquer uma das camadas chega ao cliente.
+- **Numa camada só:** o CA02, o CA08, o CA09 e o CA11 ficam só na API, porque são regras de valor; o CA05 fica só na UI, porque é o comportamento do campo de cupom.
 
-Automatizo com Playwright + Cucumber. Marco como `@manual` só o que não compensa automatizar, como checagens visuais. Quando um cenário falha porque o sistema contraria a documentação, não ajusto o esperado: abro o bug e marco o cenário com `@bug-XX`.
+Automatizo com Playwright + Cucumber. Todos os cenários foram automatizados; nenhum ficou `@manual`. A execução manual no Google Chrome 154 está em [03-execucao.md](03-execucao.md). Quando um cenário falha porque o sistema contraria a documentação, não ajusto o esperado: abro o bug e marco o cenário com `@bug-XX`.
 
 **Navegadores.** Rodo os cenários de UI em Chromium, Firefox e WebKit, os três motores que cobrem Chrome/Edge, Firefox e Safari. A regra de cálculo está na API, então o resultado esperado é o mesmo nos três. O que muda entre eles é a renderização e o comportamento da tela, como os botões desabilitados no limite de 5 e as mensagens de validação. Se um cenário falha em um só navegador, registro o bug indicando em qual. Os cenários de API não dependem de navegador.
 
@@ -62,8 +63,8 @@ Os produtos, preços e cupons são fixos (tabela em [CLAUDE.md](../CLAUDE.md#dad
 | CA09 | P001 + P004 + BEMVINDO10 | 109,80 | desconto 10,98 só nos produtos, total 118,72 |
 
 - **Cupons:** `BEMVINDO10` em maiúsculas, em minúsculas e misturado com espaços no início e no fim; `VERAO2026` (expirado); `XYZ123` (inexistente). O cupom vazio e o só com espaços ficaram como observação (OBS-01, DOC-06).
-- **Quantidade:** 1 e 5 (válidos); 0, −1 e 6 (inválidos, pela API).
-- **Cliente:** Maria Silva / maria@exemplo.com / 01310-100. Os casos de CEP, nome e e-mail inválidos vêm da exploração (seção 5) e da DOC-08.
+- **Quantidade:** na API, 5 (aceito), 6 (acima do limite, também em `/api/pedidos`) e 0, −1, 1.5 e `"2"` como texto (inválidos), no CT-52 e no CT-53. Na tela, o limite de 5 no carrinho e na vitrine (CT-50 e CT-51).
+- **Cliente:** Maria Silva / maria@exemplo.com / 01310-100. Os casos de CEP, nome e e-mail inválidos vêm da exploração (seção 5); os casos duvidosos da DOC-08 ficaram como observação.
 
 ## Ambiente e como rodar
 
@@ -83,7 +84,7 @@ npx cucumber-js --tags "@CT-24"      # um cenário
 $env:HEADLESS="false"; npm test      # PowerShell, com o navegador visível
 ```
 
-Cada navegador gera o seu relatório em `reports/cucumber-report-<navegador>.html`, e cada cenário de UI registra o navegador e a versão usados. Quando um cenário de UI falha ou tem `@bug-XX`, o print é anexado ao relatório e salvo em `docs/05-evidencias/automacao/CT-XX_<navegador>_<passou|falhou>.png`. Em `Scenario Outline`, o nome ganha o sufixo `-ex<N>`, com a posição do exemplo (ex.: `CT-02-ex2_chromium_falhou.png`), para cada exemplo ter o seu print.
+Cada navegador gera o seu relatório em `reports/cucumber-report-<navegador>.html`, e cada cenário de UI registra o navegador e a versão usados. Quando um cenário de UI falha ou tem `@bug-XX`, o print é anexado ao relatório e salvo em `docs/05-evidencias/automacao/CT-XX_<navegador>_<passou|falhou>.png`. Em `Scenario Outline`, o nome ganha o sufixo `-ex<N>`, com a posição do exemplo (ex.: `CT-02-ex2_chromium_falhou.png`), para cada exemplo ter o seu print. Nos cenários de API com `@bug-XX` que falham, a requisição e a resposta são salvas em `docs/05-evidencias/automacao/CT-XX_api.json`. Os relatórios HTML da execução final estão versionados em `docs/05-evidencias/automacao/relatorios/`.
 
 ## Riscos e limitações
 
@@ -93,6 +94,7 @@ Cada navegador gera o seu relatório em `reports/cucumber-report-<navegador>.htm
 - **Validade do cupom (DOC-13).** Os cupons são fixos, então só testo um cupom já expirado. A virada de data (último dia válido × primeiro dia expirado) e o fuso horário ficam sem cobertura.
 - **Arredondamento (DOC-12).** Nenhuma combinação de produtos gera uma terceira casa decimal. Cubro o CA11 verificando que nenhum valor da resposta passa de 2 casas.
 - **Textos não documentados (DOC-09).** As mensagens do checkout foram tiradas da tela. Se mudarem, o teste quebra sem que seja necessariamente um bug.
+
 ## Critérios de saída
 
 - Cada critério de CA01 a CA11 tem pelo menos um cenário, automatizado ou manual com justificativa, rastreado na matriz.
@@ -107,7 +109,7 @@ Cada navegador gera o seu relatório em `reports/cucumber-report-<navegador>.htm
 | [00-exploracao.md](00-exploracao.md) | Exploração manual, observações e análise da documentação (DOC-01 a DOC-17) |
 | [01-plano-de-teste.md](01-plano-de-teste.md) | Este plano |
 | [02-matriz-rastreabilidade.md](02-matriz-rastreabilidade.md) | Regra × cenário × camada, com resultado e bug |
-| [03-execucao.md](03-execucao.md) | Resultado de cada cenário |
+| [03-execucao.md](03-execucao.md) | Resultado de cada cenário por navegador e a execução manual no Google Chrome 154 |
 | [04-bugs.md](04-bugs.md) | Bugs com passos, esperado × obtido e evidência |
-| [05-evidencias/](05-evidencias/) | Prints e respostas da API |
+| [05-evidencias/](05-evidencias/) | Prints, JSON de API, relatórios HTML da execução final e GIFs da execução manual |
 | [features/](../features/) | Cenários Gherkin |

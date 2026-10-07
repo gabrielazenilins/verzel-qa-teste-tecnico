@@ -38,7 +38,7 @@
 - Obtido: subtotal 200,00 · desconto 20,00 · frete 19,90 · total **199,90** · "Faltam R$ 0,00 para o frete grátis."
 
 **O defeito também chega ao pedido (`POST /api/pedidos`)**
-- Na execução automatizada de 07/10/2026 (CT-27), o pedido com P005 ×2 foi confirmado (201) com frete **19,9** e total **219,9**: pedido **VZ-532413**.
+- Na execução automatizada de 07/10/2026 (CT-27), o pedido com P005 ×2 foi confirmado (201) com frete **19,9** e total **219,9**. A requisição e a resposta estão em `docs/05-evidencias/automacao/CT-27_api.json`.
 - Ou seja, além de exibir o valor errado no carrinho, a loja confirma o pedido cobrando o frete.
 
 **Evidências**
@@ -54,7 +54,6 @@
 - Acima do limite a regra funciona: P001 + P004 + P005 (R$ 209,80) → frete "Grátis"; com BEMVINDO10 → desconto R$ 20,98, frete grátis, total R$ 188,82 (CA08 atendido).
 - Abaixo do limite também: R$ 199,90 e R$ 199,80 cobram R$ 19,90 e informam R$ 0,10 e R$ 0,20 faltantes.
 - O defeito está só no valor-limite: indica comparação `subtotal > 200` em vez de `subtotal >= 200`.
-- Confirmado: o erro também afeta `POST /api/pedidos` (CT-27).
 
 ---
 
@@ -84,7 +83,7 @@
 - **Regra:** CA10 ("Cada produto pode ter no máximo 5 unidades por pedido. A regra vale para a interface e para a API.") e tabela de erros (`QUANTIDADE_MAXIMA_EXCEDIDA`, 422: "A quantidade de um produto é maior que 5.").
 - **Camada:** API (`POST /api/carrinho/calcular` e `POST /api/pedidos`)
 - **Cenários:** CT-52 · 6 (`/carrinho/calcular`) e CT-53 (`/api/pedidos`), em `features/quantidade.feature`, com `@bug-03`
-- **Ambiente:** https://verzel-store.qa-test-verzel-store.workers.dev · Playwright (Chromium) e chamada manual · 07/10/2026
+- **Ambiente:** https://verzel-store.qa-test-verzel-store.workers.dev · Chromium 153.0.8010.12 via Playwright 1.63 e chamada manual · 07/10/2026
 
 **Passos para reproduzir**
 1. Enviar `POST /api/carrinho/calcular` com `{"itens":[{"produtoId":"P001","quantidade":6}]}`.
@@ -108,12 +107,13 @@
 **Evidências**
 - `docs/05-evidencias/automacao/CT-52-ex2_api.json` (`/carrinho/calcular`, execução automatizada)
 - `docs/05-evidencias/automacao/CT-53_api.json` (`/api/pedidos`, execução automatizada: 201 em vez de 422; o número do pedido muda a cada execução)
-- `docs/05-evidencias/exploracao/BUG-03_pedidos-quantidade-6.json` (`/api/pedidos`, chamada manual que deu origem ao bug)
+- `docs/05-evidencias/exploracao/BUG-03_pedidos-quantidade-6.json` (`/api/pedidos`, chamada manual que confirmou o bug no pedido; o bug foi encontrado pela automação, no CT-52 · 6)
 
 ---
 
 ## Observações (não são bugs)
 - **Campo de cupom vazio:** a loja mostra "Informe um cupom.". A mensagem não está na documentação; comportamento aceitável.
-- **Validações do checkout:** aparecem só ao clicar em "Confirmar pedido", não ao sair do campo.
+- **Validações do checkout (OBS-02):** aparecem só ao clicar em "Confirmar pedido", não ao sair do campo. E não somem ao corrigir o campo: só desaparecem no próximo clique em "Confirmar pedido" (conferido em 07/10; sugestão MEL-03).
+- **Esvaziar carrinho (MEL-09):** apaga todos os itens direto, sem pedir confirmação (conferido em 07/10). Fica como sugestão de melhoria, não como bug.
 - **Cupom inválido ou expirado no checkout:** a interface não leva o cupom para o checkout, então o erro 422 de `/api/pedidos` só é testável pela API.
 - **Carrinho e cupom após F5:** são mantidos (ficam na aba, como diz a documentação).

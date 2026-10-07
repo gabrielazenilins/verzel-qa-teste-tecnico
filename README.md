@@ -19,7 +19,7 @@ Também registrei o **BUG-02** (Baixa): o menu some em telas de celular. Ele fic
 
 ## Como rodar
 
-**Pré-requisitos:** Node.js (desenvolvi e testei com o 24) e acesso à internet, porque os testes rodam na loja publicada.
+**Pré-requisitos:** Node.js (testado com Node.js 24) e acesso à internet, porque os testes rodam na loja publicada.
 
 ```bash
 npm install            # instala as dependências e os navegadores do Playwright
@@ -52,6 +52,10 @@ Para ver o navegador abrindo durante os testes:
 
 **Relatórios:** cada navegador gera `reports/cucumber-report-<navegador>.html`. Os cenários de API anexam a requisição e a resposta, e os de UI registram o navegador e a versão. Quando um cenário marcado com bug falha, a evidência é salva em `docs/05-evidencias/automacao/`: um print para UI e um JSON com requisição e resposta para API.
 
+Os relatórios HTML da execução final (07/10/2026), com todos os cenários e não só os que falharam, estão versionados em [docs/05-evidencias/automacao/relatorios/](docs/05-evidencias/automacao/relatorios/), um por navegador. A pasta `reports/` não vai para o repositório.
+
+> **Atenção:** rodar os testes reescreve as evidências em `docs/05-evidencias/automacao/` (prints e JSON dos cenários com bug, com data e número de pedido novos). As versionadas são as da execução final de 07/10/2026; depois de rodar, use `git checkout -- docs/05-evidencias/automacao/` para voltar a elas.
+
 > Os comandos terminam com falha enquanto o BUG-01 e o BUG-03 estiverem abertos. Isso é esperado: os cenários desses bugs têm as tags `@bug-01` e `@bug-03` e continuam esperando o comportamento da documentação.
 
 ## Onde está cada entrega
@@ -64,7 +68,7 @@ Para ver o navegador abrindo durante os testes:
 | Cenários em Gherkin | [features/](features/) |
 | Resultado da execução, por navegador | [docs/03-execucao.md](docs/03-execucao.md) |
 | Bugs | [docs/04-bugs.md](docs/04-bugs.md) |
-| Evidências (prints e JSON) | [docs/05-evidencias/](docs/05-evidencias/) |
+| Evidências (prints, JSON de API, relatórios HTML da execução final e GIFs da execução manual) | [docs/05-evidencias/](docs/05-evidencias/) |
 
 ## Estrutura
 

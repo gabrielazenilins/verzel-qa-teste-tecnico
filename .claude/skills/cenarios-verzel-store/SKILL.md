@@ -69,7 +69,7 @@ Cada feature agrupa uma regra e pode ter cenários `@ui` e `@api`.
 | `features/checkout.feature` | nome, e-mail, CEP, confirmação | CT-60 a CT-79 |
 | `features/api-erros.feature` | contrato da API: códigos de erro, 405, produtos, fórmula do total e CA11 | CT-80 a CT-99 |
 
-Steps: um arquivo por feature (`steps/<nome>.steps.js`) + `steps/common.steps.js` para os passos compartilhados (seção 3).
+Steps: todos os passos ficam num único arquivo, `steps/common.steps.js`, separados por seção (API, UI: preparação do carrinho, ações, verificações). Antes de criar um passo, procure nele: o Cucumber dá erro com passos duplicados. Só crie outro arquivo de steps se um passo for exclusivo de uma feature e não fizer sentido no vocabulário comum.
 
 ## 3. Linguagem padrão dos passos
 Keywords em inglês, Feature e Scenario em português, passos em inglês.

@@ -1,7 +1,8 @@
 # Contexto de testes — Verzel Store (teste técnico QA Júnior)
+
 ## Idioma
 - Responda sempre em português do Brasil, inclusive resumos, perguntas e relatórios de revisão.
-- Mensagens de commit também em português. 
+- Mensagens de commit também em português.
 
 ## Sistema sob teste
 - Loja: https://verzel-store.qa-test-verzel-store.workers.dev/
@@ -10,7 +11,7 @@
 - Funcionalidade em teste: card **VZS-142**, versão 2.3.0 — cupom de desconto e frete grátis.
 - Documentação de referência: `docs/referencias/documentacao-v2.3.0.md` (transcrição em texto; ler antes de levantar cenários). O original é `docs/referencias/documentacao-v2.3.0.pdf` (PDF só com imagem, sem texto selecionável); consulte-o apenas para tirar dúvida sobre a transcrição.
 
-## Regras (resumo da documentação; em caso de dúvida, vale o PDF)
+## Regras (resumo da documentação; em caso de dúvida, vale a documentação de referência)
 - CA01 `BEMVINDO10` = 10% sobre o subtotal dos produtos.
 - CA02 Código do cupom ignora maiúsculas/minúsculas e espaços no início e no fim.
 - CA03 Cupom inexistente → "Cupom inválido." e sem desconto.
@@ -26,7 +27,7 @@
 - Checkout: nome com nome e sobrenome; e-mail válido; CEP com 8 dígitos, com ou sem hífen; pagamento na entrega.
 - `POST /api/carrinho/calcular`: cupom inválido/expirado → 200 sem desconto, motivo em `cupom.mensagem`.
 - `POST /api/pedidos`: 201 com número `VZ-` + 6 dígitos; cupom inválido/expirado → 422.
-- Erros: formato `{ "erro": { "codigo", "mensagem", "campo" } }`; códigos JSON_INVALIDO (400), ROTA_NAO_ENCONTRADA (404), PRODUTO_NAO_ENCONTRADO (404 no GET / 422 no POST), METODO_NAO_PERMITIDO (405), ITENS_OBRIGATORIOS, ITEM_INVALIDO, ITEM_DUPLICADO, QUANTIDADE_INVALIDA, QUANTIDADE_MAXIMA_EXCEDIDA, DADOS_INVALIDOS, CUPOM_INVALIDO, CUPOM_EXPIRADO (422).
+- Erros: formato `{ "erro": { "codigo", "mensagem", "campo" } }` (exceção: o `DADOS_INVALIDOS` traz `erro.campos`, uma lista de `{ campo, mensagem }`; ver DOC-01); códigos JSON_INVALIDO (400), ROTA_NAO_ENCONTRADA (404), PRODUTO_NAO_ENCONTRADO (404 no GET / 422 no POST), METODO_NAO_PERMITIDO (405), ITENS_OBRIGATORIOS, ITEM_INVALIDO, ITEM_DUPLICADO, QUANTIDADE_INVALIDA, QUANTIDADE_MAXIMA_EXCEDIDA, DADOS_INVALIDOS, CUPOM_INVALIDO, CUPOM_EXPIRADO (422).
 
 ## Dados de teste
 | Id | Produto | Preço |
@@ -59,7 +60,7 @@ Login, cadastro, pagamento online, consulta de pedidos, testes de carga, estress
 - Tags: `@CT-XX` (ID do cenário), `@CAXX` (critério), `@ui`/`@api`, `@manual`/`@automatizado`, `@bug-XX` quando falhar por defeito.
 - Cenário sem critério CA correspondente usa, no lugar do `@CAXX`:
   - `@regra-loja`: regras da loja anteriores ao card (nome e sobrenome, e-mail válido, CEP com 8 dígitos, pagamento na entrega);
-  - `@contrato-api`: comportamento definido só na seção "API" e na tabela de códigos de erro da documentação (formato de erro, status sem CA, endpoints de produtos).
+  - `@contrato-api`: comportamento definido só na seção "API" e na tabela de códigos de erro da documentação (formato de erro, status sem CA, endpoints de produtos, número do pedido `VZ-` + 6 dígitos).
   - Se o cenário também exercita um CA, leva as duas tags (ex.: `@CA01 @regra-loja`).
 - Valores exibidos na UI ("R$ 1.234,56") são convertidos para número com o helper `support/money.js` antes de comparar.
 - Cenários: `features/`; execução e evidências: `docs/`; bugs: `docs/04-bugs.md`.

@@ -23,7 +23,7 @@ Se o comando falhar por falta de dependências, diga isso e siga com a revisão 
 
 ## 4. O que verificar no código
 **Features (`features/`)**
-- Todo cenário tem as 4 tags: `@CT-XX`, `@CAXX`, `@ui` ou `@api`, `@manual` ou `@automatizado`.
+- Todo cenário tem as 4 tags: `@CT-XX`, `@CAXX` (ou, quando nenhum CA se aplica, `@regra-loja` ou `@contrato-api`, como define o CLAUDE.md), `@ui` ou `@api`, `@manual` ou `@automatizado`.
 - `@CT-XX` é único no projeto e está dentro da faixa de ID da feature.
 - Algum `Then` só executa uma ação em vez de verificar um resultado?
 - Cenários com mais de um objetivo.
