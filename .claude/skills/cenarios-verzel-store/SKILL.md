@@ -160,7 +160,8 @@ Then every monetary value in the response should have at most 2 decimal places
 | Carrinho | aumentar / diminuir | `getByRole('button', { name: 'Aumentar quantidade de Camiseta Essencial' })` / `'Diminuir quantidade de ...'` |
 | Carrinho | quantidade | `getByRole('group', { name: 'Quantidade de Camiseta Essencial' }).locator('output')` |
 | Carrinho | remover item | `getByRole('button', { name: 'Remover Camiseta Essencial do carrinho' })` |
-| Carrinho | aviso de limite | `.item-limite` ("Limite de 5 unidades por produto.") |
+| Carrinho | linha do produto | `page.locator('li.item-carrinho').filter({ has: <grupo 'Quantidade de ...'> })` |
+| Carrinho | aviso de limite | `.item-limite` dentro da linha do produto ("Limite de 5 unidades por produto.") |
 | Carrinho | campo do cupom | `#campo-cupom` |
 | Carrinho | aplicar cupom | `getByRole('button', { name: 'Aplicar cupom' })` |
 | Carrinho | mensagem de erro do cupom | `#mensagem-cupom` ("Cupom inválido.", "Cupom expirado.", "Informe um cupom.") |
@@ -194,7 +195,7 @@ class CartPage {
         this.shipping       = page.locator('[data-valor="frete"]')
         this.total          = page.locator('[data-valor="total"]')
         this.shippingNotice = page.locator('.aviso-frete')
-        this.limitMessage   = page.locator('.item-limite')
+        // aviso de limite: limitMessage(id) = .item-limite dentro do li.item-carrinho do produto (pages/CartPage.js)
         this.checkoutLink   = page.getByRole('link', { name: 'Finalizar compra' })
     }
     async open(){

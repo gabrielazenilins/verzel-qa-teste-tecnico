@@ -1,7 +1,7 @@
 // Roda o Cucumber em um ou mais navegadores, em sequência, definindo BROWSER para cada um.
 // Funciona igual no PowerShell, cmd e bash (não depende de sintaxe de variável de ambiente do shell).
 //   node scripts/run-browsers.js firefox
-//   node scripts/run-browsers.js chromium firefox webkit -- --tags "@smoke"
+//   node scripts/run-browsers.js chromium firefox webkit -- --tags "@CT-20"
 const { spawnSync } = require('child_process')
 const path = require('path')
 

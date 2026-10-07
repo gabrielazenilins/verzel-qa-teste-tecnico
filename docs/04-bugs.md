@@ -13,7 +13,8 @@
 - **Regra:** CA06 ("O frete é grátis para compras com subtotal a partir de R$ 200,00, inclusive") e tabela de cálculo ("R$ 0,00 quando o subtotal é igual ou maior que R$ 200,00"). Afeta também o CA08: com cupom, o frete continua sendo cobrado (CT-25).
 - **Camada:** API (`POST /api/carrinho/calcular` e `POST /api/pedidos`), refletido na UI
 - **Cenários:** CT-20 (UI, CA06), CT-23 (API, CA06), CT-25 (API, CA08, com cupom) e CT-27 (API, `/api/pedidos`), em `features/frete.feature`
-- **Ambiente:** https://verzel-store.qa-test-verzel-store.workers.dev · Google Chrome 154.0.8037.98 · 06/10/2026
+- **Ambiente:** https://verzel-store.qa-test-verzel-store.workers.dev · Google Chrome 154.0.8037.98 (exploração, 06/10/2026) · Chromium, Firefox e WebKit via Playwright (automação, 07/10/2026)
+- **Navegadores:** o defeito ocorre nos três navegadores automatizados (CT-20 falhou em Chromium, Firefox e WebKit). Como o valor errado vem da API, não depende do navegador.
 
 **Passos para reproduzir**
 1. Na vitrine, clicar 2 vezes em "Adicionar ao carrinho" da Mochila Urbana 20L (P005, R$ 100,00).
@@ -47,6 +48,7 @@
 - `docs/05-evidencias/automacao/CT-23_api.json` (`/carrinho/calcular`, R$ 200,00)
 - `docs/05-evidencias/automacao/CT-25_api.json` (`/carrinho/calcular`, R$ 200,00 com BEMVINDO10)
 - `docs/05-evidencias/automacao/CT-27_api.json` (`/api/pedidos`, R$ 200,00). O número do pedido nesse arquivo é o da última execução e muda a cada vez, porque é fictício; os valores são os mesmos.
+- `docs/05-evidencias/automacao/CT-20_chromium_falhou.png`, `CT-20_firefox_falhou.png` e `CT-20_webkit_falhou.png` (carrinho com P005 ×2: frete R$ 19,90, total R$ 219,90 e "Faltam R$ 0,00 para o frete grátis.", nos três navegadores)
 
 **Observações**
 - Acima do limite a regra funciona: P001 + P004 + P005 (R$ 209,80) → frete "Grátis"; com BEMVINDO10 → desconto R$ 20,98, frete grátis, total R$ 188,82 (CA08 atendido).

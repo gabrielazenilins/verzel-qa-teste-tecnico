@@ -2,7 +2,7 @@
 
 Status: **Passou** (resultado igual ao esperado) · **Falhou** (o sistema respondeu diferente do esperado; vira bug) · **Bloqueado** (não foi possível executar). "—" = ainda não executado.
 
-Colunas Chromium, Firefox e WebKit: resultado em cada navegador. Os cenários de API não dependem de navegador e foram executados uma vez, pelo Chromium, em 07/10/2026; por isso ficam com "—" no Firefox e no WebKit. Os caminhos de evidência são relativos a `docs/05-evidencias/`.
+Colunas Chromium, Firefox e WebKit: resultado em cada navegador, na execução de 07/10/2026 (`npm run test:all`). Os cenários de UI rodaram nos três navegadores. Os de API não dependem de navegador e rodam uma vez, pelo Chromium; por isso ficam com "—" no Firefox e no WebKit. Os caminhos de evidência são relativos a `docs/05-evidencias/`.
 
 Nos `Scenario Outline`, cada exemplo tem a sua linha (ex.: `CT-24 · 199,90`), para cada resultado ter evidência própria.
 
@@ -10,10 +10,10 @@ Nos `Scenario Outline`, cada exemplo tem a sua linha (ex.: `CT-24 · 199,90`), p
 
 | ID | Cenário | Regra | Camada | Tipo | Chromium | Firefox | WebKit | Evidência | Bug |
 |---|---|---|---|---|---|---|---|---|---|
-| CT-01 | Cupom válido mostra o desconto e esconde o campo de cupom | CA01, CA05 | UI | automatizado | — | — | — | | |
-| CT-02 · XYZ123 | Cupom recusado mostra o motivo e não dá desconto | CA03 | UI | automatizado | — | — | — | | |
-| CT-02 · VERAO2026 | Cupom recusado mostra o motivo e não dá desconto | CA04 | UI | automatizado | — | — | — | | |
-| CT-03 | Para trocar de cupom, o cliente remove o atual e aplica outro | CA05 | UI | automatizado | — | — | — | | |
+| CT-01 | Cupom válido mostra o desconto e esconde o campo de cupom | CA01, CA05 | UI | automatizado | Passou | Passou | Passou | | |
+| CT-02 · XYZ123 | Cupom recusado mostra o motivo e não dá desconto | CA03 | UI | automatizado | Passou | Passou | Passou | | |
+| CT-02 · VERAO2026 | Cupom recusado mostra o motivo e não dá desconto | CA04 | UI | automatizado | Passou | Passou | Passou | | |
+| CT-03 | Para trocar de cupom, o cliente remove o atual e aplica outro | CA05 | UI | automatizado | Passou | Passou | Passou | | |
 | CT-04 · BEMVINDO10 | API aplica 10% de desconto com o BEMVINDO10 em qualquer forma aceita | CA01 | API | automatizado | Passou | — | — | | |
 | CT-04 · bemvindo10 | API aplica 10% de desconto com o BEMVINDO10 em qualquer forma aceita | CA02 | API | automatizado | Passou | — | — | | |
 | CT-04 · `" bemVindo10 "` | API aplica 10% de desconto com o BEMVINDO10 em qualquer forma aceita | CA02 | API | automatizado | Passou | — | — | | |
@@ -27,9 +27,9 @@ Nos `Scenario Outline`, cada exemplo tem a sua linha (ex.: `CT-24 · 199,90`), p
 
 | ID | Cenário | Regra | Camada | Tipo | Chromium | Firefox | WebKit | Evidência | Bug |
 |---|---|---|---|---|---|---|---|---|---|
-| CT-20 | Frete grátis com subtotal de exatamente R$ 200,00 | CA06 | UI | automatizado | — | — | — | | BUG-01 |
-| CT-21 | Frete cobrado e aviso de R$ 0,10 com subtotal de R$ 199,90 | CA07 | UI | automatizado | — | — | — | | |
-| CT-22 | Frete passa a ser grátis ao aumentar a quantidade no carrinho | CA06 | UI | automatizado | — | — | — | | |
+| CT-20 | Frete grátis com subtotal de exatamente R$ 200,00 | CA06 | UI | automatizado | Falhou | Falhou | Falhou | `automacao/CT-20_chromium_falhou.png`, `automacao/CT-20_firefox_falhou.png`, `automacao/CT-20_webkit_falhou.png` | BUG-01 |
+| CT-21 | Frete cobrado e aviso de R$ 0,10 com subtotal de R$ 199,90 | CA07 | UI | automatizado | Passou | Passou | Passou | | |
+| CT-22 | Frete passa a ser grátis ao aumentar a quantidade no carrinho | CA06 | UI | automatizado | Passou | Passou | Passou | | |
 | CT-23 | API dá frete grátis com subtotal de exatamente R$ 200,00 | CA06 | API | automatizado | Falhou | — | — | `automacao/CT-23_api.json` | BUG-01 |
 | CT-24 · 219,80 | API calcula frete e valor faltante acima e abaixo de R$ 200,00 | CA06 | API | automatizado | Passou | — | — | | |
 | CT-24 · 239,70 | API calcula frete e valor faltante acima e abaixo de R$ 200,00 | CA06 | API | automatizado | Passou | — | — | | |
@@ -45,8 +45,8 @@ Nos `Scenario Outline`, cada exemplo tem a sua linha (ex.: `CT-24 · 199,90`), p
 
 | ID | Cenário | Regra | Camada | Tipo | Chromium | Firefox | WebKit | Evidência | Bug |
 |---|---|---|---|---|---|---|---|---|---|
-| CT-50 | Carrinho trava o botão + ao chegar a 5 unidades | CA10 | UI | automatizado | — | — | — | | |
-| CT-51 | Vitrine trava o botão Adicionar ao carrinho ao chegar a 5 unidades | CA10 | UI | automatizado | — | — | — | | |
+| CT-50 | Carrinho trava o botão + ao chegar a 5 unidades | CA10 | UI | automatizado | Passou | Passou | Passou | | |
+| CT-51 | Vitrine trava o botão Adicionar ao carrinho ao chegar a 5 unidades | CA10 | UI | automatizado | Passou | Passou | Passou | | |
 | CT-52 · 5 | API aceita até 5 unidades e recusa quantidade acima do limite ou inválida | CA10 | API | automatizado | Passou | — | — | | |
 | CT-52 · 6 | API aceita até 5 unidades e recusa quantidade acima do limite ou inválida | CA10 | API | automatizado | Falhou | — | — | `automacao/CT-52-ex2_api.json` | BUG-03 |
 | CT-52 · 0 | API aceita até 5 unidades e recusa quantidade acima do limite ou inválida | CA10 | API | automatizado | Passou | — | — | | |
@@ -59,11 +59,11 @@ Nos `Scenario Outline`, cada exemplo tem a sua linha (ex.: `CT-24 · 199,90`), p
 
 | ID | Cenário | Regra | Camada | Tipo | Chromium | Firefox | WebKit | Evidência | Bug |
 |---|---|---|---|---|---|---|---|---|---|
-| CT-60 | Compra completa com cupom, do carrinho à confirmação | CA01, regra da loja | UI | automatizado | — | — | — | | |
-| CT-61 · nome | Dado do cliente inválido mostra a mensagem do campo e não confirma o pedido | regra da loja | UI | automatizado | — | — | — | | |
-| CT-61 · email | Dado do cliente inválido mostra a mensagem do campo e não confirma o pedido | regra da loja | UI | automatizado | — | — | — | | |
-| CT-61 · cep 7 dígitos | Dado do cliente inválido mostra a mensagem do campo e não confirma o pedido | regra da loja | UI | automatizado | — | — | — | | |
-| CT-61 · cep 9 dígitos | Dado do cliente inválido mostra a mensagem do campo e não confirma o pedido | regra da loja | UI | automatizado | — | — | — | | |
+| CT-60 | Compra completa com cupom, do carrinho à confirmação | CA01, regra da loja | UI | automatizado | Passou | Passou | Passou | | |
+| CT-61 · nome | Dado do cliente inválido mostra a mensagem do campo e não confirma o pedido | regra da loja | UI | automatizado | Passou | Passou | Passou | | |
+| CT-61 · email | Dado do cliente inválido mostra a mensagem do campo e não confirma o pedido | regra da loja | UI | automatizado | Passou | Passou | Passou | | |
+| CT-61 · cep 7 dígitos | Dado do cliente inválido mostra a mensagem do campo e não confirma o pedido | regra da loja | UI | automatizado | Passou | Passou | Passou | | |
+| CT-61 · cep 9 dígitos | Dado do cliente inválido mostra a mensagem do campo e não confirma o pedido | regra da loja | UI | automatizado | Passou | Passou | Passou | | |
 | CT-62 · 01310-100 | API cria o pedido com número VZ- e CEP normalizado | regra da loja | API | automatizado | Passou | — | — | | |
 | CT-62 · 01310100 | API cria o pedido com número VZ- e CEP normalizado | regra da loja | API | automatizado | Passou | — | — | | |
 | CT-63 | API recusa pedido com dados do cliente inválidos | regra da loja | API | automatizado | Passou | — | — | | |
