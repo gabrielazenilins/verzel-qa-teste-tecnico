@@ -38,3 +38,48 @@ Nos `Scenario Outline`, cada exemplo tem a sua linha (ex.: `CT-24 · 199,90`), p
 | CT-26 · 219,80 | API calcula desconto e frete com cupom | CA08 | API | automatizado | — | | |
 | CT-26 · 109,80 | API calcula desconto e frete com cupom | CA09 | API | automatizado | — | | |
 | CT-27 | Pedido com subtotal de exatamente R$ 200,00 sai com frete grátis | CA06 | API | automatizado | — | | |
+
+## Limite de quantidade (`features/quantidade.feature`)
+
+| ID | Cenário | Regra | Camada | Tipo | Resultado | Evidência | Bug |
+|---|---|---|---|---|---|---|---|
+| CT-50 | Carrinho trava o botão + ao chegar a 5 unidades | CA10 | UI | automatizado | — | | |
+| CT-51 | Vitrine trava o botão Adicionar ao carrinho ao chegar a 5 unidades | CA10 | UI | automatizado | — | | |
+| CT-52 · 5 | API aceita até 5 unidades e recusa quantidade acima do limite ou inválida | CA10 | API | automatizado | — | | |
+| CT-52 · 6 | API aceita até 5 unidades e recusa quantidade acima do limite ou inválida | CA10 | API | automatizado | — | | |
+| CT-52 · 0 | API aceita até 5 unidades e recusa quantidade acima do limite ou inválida | CA10 | API | automatizado | — | | |
+| CT-52 · -1 | API aceita até 5 unidades e recusa quantidade acima do limite ou inválida | CA10 | API | automatizado | — | | |
+| CT-52 · 1.5 | API aceita até 5 unidades e recusa quantidade acima do limite ou inválida | CA10 | API | automatizado | — | | |
+| CT-52 · `"2"` | API aceita até 5 unidades e recusa quantidade acima do limite ou inválida | CA10 | API | automatizado | — | | |
+
+## Checkout e confirmação (`features/checkout.feature`)
+
+| ID | Cenário | Regra | Camada | Tipo | Resultado | Evidência | Bug |
+|---|---|---|---|---|---|---|---|
+| CT-60 | Compra completa com cupom, do carrinho à confirmação | CA01, regra da loja | UI | automatizado | — | | |
+| CT-61 · nome | Dado do cliente inválido mostra a mensagem do campo e não confirma o pedido | regra da loja | UI | automatizado | — | | |
+| CT-61 · email | Dado do cliente inválido mostra a mensagem do campo e não confirma o pedido | regra da loja | UI | automatizado | — | | |
+| CT-61 · cep 7 dígitos | Dado do cliente inválido mostra a mensagem do campo e não confirma o pedido | regra da loja | UI | automatizado | — | | |
+| CT-61 · cep 9 dígitos | Dado do cliente inválido mostra a mensagem do campo e não confirma o pedido | regra da loja | UI | automatizado | — | | |
+| CT-62 · 01310-100 | API cria o pedido com número VZ- e CEP normalizado | regra da loja | API | automatizado | — | | |
+| CT-62 · 01310100 | API cria o pedido com número VZ- e CEP normalizado | regra da loja | API | automatizado | — | | |
+| CT-63 | API recusa pedido com dados do cliente inválidos | regra da loja | API | automatizado | — | | |
+
+## Contrato da API (`features/api-erros.feature`)
+
+| ID | Cenário | Regra | Camada | Tipo | Resultado | Evidência | Bug |
+|---|---|---|---|---|---|---|---|
+| CT-80 · JSON_INVALIDO | API responde com o status e o código de erro documentados | contrato da API | API | automatizado | — | | |
+| CT-80 · ROTA_NAO_ENCONTRADA | API responde com o status e o código de erro documentados | contrato da API | API | automatizado | — | | |
+| CT-80 · PRODUTO_NAO_ENCONTRADO 404 | API responde com o status e o código de erro documentados | contrato da API | API | automatizado | — | | |
+| CT-80 · PRODUTO_NAO_ENCONTRADO 422 | API responde com o status e o código de erro documentados | contrato da API | API | automatizado | — | | |
+| CT-80 · ITENS_OBRIGATORIOS sem itens | API responde com o status e o código de erro documentados | contrato da API | API | automatizado | — | | |
+| CT-80 · ITENS_OBRIGATORIOS lista vazia | API responde com o status e o código de erro documentados | contrato da API | API | automatizado | — | | |
+| CT-80 · ITEM_INVALIDO | API responde com o status e o código de erro documentados | contrato da API | API | automatizado | — | | |
+| CT-80 · ITEM_DUPLICADO | API responde com o status e o código de erro documentados | contrato da API | API | automatizado | — | | |
+| CT-81 · GET /api/carrinho/calcular | API recusa método não aceito numa rota existente | contrato da API | API | automatizado | — | | |
+| CT-81 · GET /api/pedidos | API recusa método não aceito numa rota existente | contrato da API | API | automatizado | — | | |
+| CT-81 · POST /api/produtos | API recusa método não aceito numa rota existente | contrato da API | API | automatizado | — | | |
+| CT-82 | API lista os 8 produtos e consulta um produto pelo id | contrato da API | API | automatizado | — | | |
+| CT-83 · 239,70 | API calcula o total pela fórmula, com itens e valores em 2 casas decimais | CA11, fórmula | API | automatizado | — | | |
+| CT-83 · 109,80 | API calcula o total pela fórmula, com itens e valores em 2 casas decimais | CA11, fórmula | API | automatizado | — | | |

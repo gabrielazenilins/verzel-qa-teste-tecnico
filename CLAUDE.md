@@ -54,6 +54,10 @@ Login, cadastro, pagamento online, consulta de pedidos, testes de carga, estress
 - Playwright + Cucumber, JavaScript CommonJS.
 - Keywords Gherkin em inglês; Feature e Scenario em português; steps em inglês.
 - Tags: `@CT-XX` (ID do cenário), `@CAXX` (critério), `@ui`/`@api`, `@manual`/`@automatizado`, `@bug-XX` quando falhar por defeito.
+- Cenário sem critério CA correspondente usa, no lugar do `@CAXX`:
+  - `@regra-loja`: regras da loja anteriores ao card (nome e sobrenome, e-mail válido, CEP com 8 dígitos, pagamento na entrega);
+  - `@contrato-api`: comportamento definido só na seção "API" e na tabela de códigos de erro da documentação (formato de erro, status sem CA, endpoints de produtos).
+  - Se o cenário também exercita um CA, leva as duas tags (ex.: `@CA01 @regra-loja`).
 - Valores exibidos na UI ("R$ 1.234,56") são convertidos para número com o helper `support/money.js` antes de comparar.
 - Cenários: `features/`; execução e evidências: `docs/`; bugs: `docs/04-bugs.md`.
 - Ambiguidades registradas em `docs/00-exploracao.md` (seção "Análise da documentação", itens DOC-XX).

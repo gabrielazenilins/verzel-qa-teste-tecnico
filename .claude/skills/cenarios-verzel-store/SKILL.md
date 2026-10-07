@@ -63,10 +63,10 @@ Cada feature agrupa uma regra e pode ter cenários `@ui` e `@api`.
 |---|---|---|
 | `features/cupom.feature` | CA01–CA05 | CT-01 a CT-19 |
 | `features/frete.feature` | CA06–CA09 | CT-20 a CT-39 |
-| `features/calculo.feature` | fórmula do total, CA11 | CT-40 a CT-49 |
+| ~~`features/calculo.feature`~~ | não será criada: a fórmula do total e o CA11 ficaram no CT-83 de `api-erros.feature` | (CT-40 a CT-49 sem uso) |
 | `features/quantidade.feature` | CA10 | CT-50 a CT-59 |
 | `features/checkout.feature` | nome, e-mail, CEP, confirmação | CT-60 a CT-79 |
-| `features/api-erros.feature` | tabela de códigos de erro | CT-80 a CT-99 |
+| `features/api-erros.feature` | contrato da API: códigos de erro, 405, produtos, fórmula do total e CA11 | CT-80 a CT-99 |
 
 Steps: um arquivo por feature (`steps/<nome>.steps.js`) + `steps/common.steps.js` para os passos compartilhados (seção 3).
 
@@ -106,6 +106,15 @@ Then the increase button of "P001" should be disabled
 Then I should see the limit message for "P001"
 Then the field "cep" should show the error "Informe um CEP com 8 dígitos."
 Then I should see the order confirmation with a number in the format VZ-000000
+Then the cart should be empty
+Then I should still be on the checkout page                # dado inválido: o pedido não é confirmado
+```
+
+**`steps/common.steps.js` — UI (vitrine)**
+```gherkin
+When I add "P001" to the cart 5 times                    # cliques em "Adicionar ao carrinho" na vitrine, ficando na vitrine
+Then the add button of "P001" should be disabled
+Then I should see the limit notice of "P001" on the products page   # só que o aviso de limite aparece, sem cobrar o texto
 ```
 
 **`steps/common.steps.js` — API**
@@ -123,9 +132,16 @@ Then the response status should be 200
 Then the response field "desconto" should be "23.97"
 Then the response field "cupom.aplicado" should be "false"
 Then the error code should be "QUANTIDADE_MAXIMA_EXCEDIDA" on field "itens[0].quantidade"
+When I send a "POST" request to "/api/carrinho/calcular" with body '{"itens":[]}'   # aspas simples quando o JSON tem aspas duplas; '' = sem corpo
+When I attach the response to the report               # ação: vem logo depois do When que chama a API, para rodar mesmo se um Then falhar
+Then the response field "numero" should match "^VZ-\d{6}$"
+Then the response should be a list with exactly the ids "P001, P002, P003, P004, P005, P006, P007, P008"
+Then the response total should be subtotal minus discount plus shipping   # compara em centavos (Math.round(x*100)); os campos já são conferidos com toBe
+Then every monetary value in the response should have at most 2 decimal places
 ```
-- `the response field` aceita caminho com ponto (`cupom.mensagem`) e converte o esperado: número (`"23.97"` → 23.97), booleano (`"true"`) ou texto. A comparação de números usa `toBe` (exata), para pegar erro de ponto flutuante (CA11).
+- `the response field` aceita caminho com ponto (`cupom.mensagem`; índice de lista também com ponto: `itens.0.total`) e converte o esperado: número (`"23.97"` → 23.97), booleano (`"true"`) ou texto. A comparação de números usa `toBe` (exata), para pegar erro de ponto flutuante (CA11).
 - Os passos `Given` de API só montam o corpo em `this.requestBody`; quem envia é o `When`.
+- `the cart items:` lê a coluna `quantidade` como literal JSON (`JSON.parse`): `1.5` vai como número decimal e `"2"` (com aspas) vai como texto. Não converta com `Number()`, senão o caso `"2"` do CT-52 deixa de testar o que diz testar.
 
 ## 4. Page Objects
 - Sem `data-testid` na loja. Use, nesta ordem: `getByRole` com o nome acessível (`aria-label`), `#id`, `[data-valor=...]` e classes semânticas (`.aviso-frete`). Evite XPath e seletor por posição.
@@ -228,7 +244,10 @@ Atenção: cada clique em +, −, aplicar ou remover dispara `POST /api/carrinho
   Assim cada execução gera a evidência do bug sem print manual.
 
 ## 6. Escrevendo cenários
-- Toda tag de cenário: `@CT-XX @CAXX @ui|@api @manual|@automatizado`.
+- Toda tag de cenário: `@CT-XX @CAXX @ui|@api @manual|@automatizado`. Quando nenhum critério CA se aplica, use no lugar do `@CAXX`:
+  - `@regra-loja`: regras da loja anteriores ao card (nome com sobrenome, e-mail válido, CEP com 8 dígitos, pagamento na entrega), em `checkout.feature`;
+  - `@contrato-api`: o que vem só da seção "API" e da tabela de códigos de erro da documentação (formato de erro, 400/404/405/422 sem CA, endpoints de produtos), em `api-erros.feature`.
+  Um cenário que exercita um CA e uma dessas regras leva as duas tags (ex.: CT-60 tem `@CA01 @regra-loja`).
 - Valores esperados concretos e calculados pela regra do `CLAUDE.md`. Use as combinações de produtos que já estão lá para os valores-limite.
 - `Scenario Outline` + `Examples` quando só os dados mudam (ex.: variações de maiúsculas e espaços do cupom, CEPs inválidos). O Gherkin remove os espaços das bordas das células: para um valor com espaço no início ou no fim, ponha as aspas dentro da célula (`" bemVindo10 "`) e escreva o passo sem aspas (`And the coupon <cupom>`), como no CT-04 de `features/cupom.feature`.
 - Divisão entre camadas (não repita na UI o que a API já verifica):

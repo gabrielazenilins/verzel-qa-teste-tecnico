@@ -219,7 +219,7 @@ Cada item termina com a interpretação que adotei e como pretendo testar.
 - **Linha do `DADOS_INVALIDOS`:** "Os detalhes vêm em **"campos"**", no plural.
 - **Problema:** não fica claro se esse erro tem um formato diferente (uma lista em `campos`), se usa o mesmo `campo` de sempre, ou se traz os dois. Quem consome a API não sabe onde ler os detalhes.
 - **Interpretação:** o `DADOS_INVALIDOS` traz uma lista em `erro.campos` com os campos inválidos, e os demais erros usam `erro.campo`.
-- **Teste:** enviar um pedido com nome, e-mail e CEP inválidos e registrar a estrutura real da resposta. Se vier diferente do documentado, entra como divergência de documentação.
+- **Teste:** CT-63 (`features/checkout.feature`) envia nome, e-mail e CEP inválidos, cobra o status 422 e o código `DADOS_INVALIDOS` e anexa a resposta ao relatório, para registrar se vem `campo` ou `campos`. O formato não é cobrado; se vier diferente do documentado, entra como divergência de documentação.
 
 #### DOC-02 — "A interface apenas exibe o resultado", mas as mensagens são outras
 - **Documentação:** "Os cálculos são feitos pela API e a interface apenas exibe o resultado."
@@ -231,13 +231,13 @@ Cada item termina com a interpretação que adotei e como pretendo testar.
 - **Exemplo de `POST /api/pedidos`:** a requisição envia `"cep": "01310-100"` e a resposta devolve `"cep": "01310100"`.
 - **Problema:** nenhuma regra fala dessa normalização. Ela só aparece no exemplo.
 - **Interpretação:** é esperado. O CEP é aceito com ou sem hífen e devolvido só com números.
-- **Teste:** enviar as duas formas e verificar que a resposta vem nos dois casos como `01310100`.
+- **Teste:** CT-62 (`features/checkout.feature`) envia as duas formas e verifica que a resposta vem nos dois casos como `01310100`.
 
 #### DOC-04 — `PRODUTO_NAO_ENCONTRADO` com dois status
 - **Tabela de erros:** o mesmo código aparece como **404** (consulta `GET /api/produtos/{id}`) e como **422** (item de carrinho ou pedido com produto inexistente).
 - **Problema:** não está errado, mas quem trata erros pelo código precisa saber que o status muda conforme o endpoint.
 - **Interpretação:** está correto como documentado.
-- **Teste:** um cenário para cada caso, validando código e status juntos.
+- **Teste:** CT-80 (`features/api-erros.feature`), um exemplo para cada caso, validando código e status juntos.
 
 #### DOC-05 — Exemplos incompletos
 - No exemplo de `POST /api/pedidos`, aparecem `"itens": [ ... ]` e `"mensagem": "..."`.
@@ -245,7 +245,7 @@ Cada item termina com a interpretação que adotei e como pretendo testar.
 - **Interpretação:**
   - `itens[].total = precoUnitario × quantidade`, arredondado em 2 casas (CA11);
   - os itens e a mensagem do cupom em `/pedidos` seguem o mesmo formato de `/carrinho/calcular` ("o mesmo resumo de valores").
-- **Teste:** comparar campo a campo a resposta de `/pedidos` com a de `/carrinho/calcular` para o mesmo carrinho.
+- **Teste:** CT-83 (`features/api-erros.feature`) verifica `itens[].total` = preço × quantidade. A comparação campo a campo entre `/pedidos` e `/carrinho/calcular` fica como observação, fora dos cenários críticos.
 
 ---
 
@@ -273,7 +273,7 @@ Cada item termina com a interpretação que adotei e como pretendo testar.
 - **Interpretação:**
   - nome válido tem pelo menos duas palavras com letras, aceitando acento e hífen;
   - e-mail segue o formato comum `texto@dominio.ext`.
-- **Teste:** um `Scenario Outline` com esses exemplos. Qualquer comportamento diferente entra como observação, não como bug, porque a regra não está definida.
+- **Teste:** nenhum. Fica como observação, fora dos cenários críticos: a regra não está definida, então um comportamento diferente não seria bug. O CT-61 cobre só os casos claramente inválidos (sem sobrenome, e-mail sem @).
 
 #### DOC-09 — Mensagens de erro do checkout não documentadas
 - **Na tela:** "Informe nome e sobrenome.", "Informe o nome completo.", "Informe um e-mail válido." e "Informe um CEP com 8 dígitos."
@@ -284,12 +284,12 @@ Cada item termina com a interpretação que adotei e como pretendo testar.
 - **Documentação:** "Envie e receba sempre JSON, com o cabeçalho `Content-Type: application/json`."
 - **Falta:** dizer o que acontece se o cabeçalho não for enviado. Não há código de erro para isso na tabela.
 - **Interpretação:** só registro o comportamento observado, sem classificar como bug.
-- **Teste:** uma chamada a `/carrinho/calcular` sem o cabeçalho, com corpo JSON válido.
+- **Teste:** nenhum. Fica como observação, fora dos cenários críticos: a documentação não define o comportamento, então não haveria esperado para cobrar.
 
 #### DOC-11 — Métodos aceitos por rota
 - **Documentação:** `405 METODO_NAO_PERMITIDO` para "rota existe, mas não aceita o método".
 - **Falta:** a lista de métodos aceitos não é explícita. Deduzi pelos exemplos: `GET` nos produtos e `POST` no carrinho e nos pedidos.
-- **Teste:** `GET /api/carrinho/calcular`, `GET /api/pedidos` e `POST /api/produtos`, esperando 405.
+- **Teste:** CT-81 (`features/api-erros.feature`): `GET /api/carrinho/calcular`, `GET /api/pedidos` e `POST /api/produtos`, esperando 405.
 
 #### DOC-15 — O que o carrinho mostra quando o frete já é grátis
 - **Documentação:** o CA07 diz que, abaixo de R$ 200,00, "o carrinho informa quanto falta para o frete grátis". A tabela de cálculo diz que o faltante é "R$ 200,00 menos o subtotal, nunca menor que zero". Nenhuma das duas diz o que a tela mostra quando o frete já é grátis.
