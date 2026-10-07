@@ -91,17 +91,17 @@ Nos `Scenario Outline`, cada exemplo tem a sua linha (ex.: `CT-24 · 199,90`), p
 
 ## Execução manual — Google Chrome 154
 
-A exploração manual de 06/10/2026, feita no Google Chrome 154.0.8037.98 e registrada em [00-exploracao.md](00-exploracao.md), já cobre a maior parte dos cenários de UI. Para não repetir o trabalho, cada exemplo aponta para o item da exploração que o cobre e usa o resultado registrado ali. Os que nenhum item cobre ficam "a executar", com os passos logo abaixo da tabela.
+A exploração manual de 06/10/2026, feita no Google Chrome 154.0.8037.98 e registrada em [00-exploracao.md](00-exploracao.md), já cobre a maior parte dos cenários de UI. Para não repetir o trabalho, cada exemplo aponta para o item da exploração que o cobre e usa o resultado registrado ali. Os dois que nenhum item cobria (CT-03 e CT-22) foram executados à mão em 07/10/2026, no Google Chrome, e gravados em GIF; os passos e as gravações estão logo abaixo da tabela.
 
 | ID | Cenário | Item da exploração | Resultado | Evidência |
 |---|---|---|---|---|
 | CT-01 | Cupom válido mostra o desconto e esconde o campo de cupom | 3-01, 3-09 | Passou: com P002 + P004 ×2 e BEMVINDO10, total R$ 215,73; o campo some e aparece "Cupom BEMVINDO10 aplicado." com "Remover cupom" | só registro em texto |
 | CT-02 · XYZ123 | Cupom recusado mostra o motivo e não dá desconto | 3-05, 3-11 | Passou: "Cupom inválido.", sem desconto (o desconto só entrou ao aplicar o BEMVINDO10 em seguida). Carrinho de R$ 239,70, não o P005 do cenário; a regra não depende do carrinho | só registro em texto |
 | CT-02 · VERAO2026 | Cupom recusado mostra o motivo e não dá desconto | 3-06, seção 7 | Passou: "Cupom expirado." e, com P005, total R$ 119,90 sem desconto | só registro em texto |
-| CT-03 | Para trocar de cupom, o cliente remove o atual e aplica outro | 3-09 e 3-10 cobrem só parte (cupom único e remoção) | **a executar**: falta aplicar outro cupom depois de remover | — |
+| CT-03 | Para trocar de cupom, o cliente remove o atual e aplica outro | 3-09 e 3-10 cobrem só parte (cupom único e remoção); o resto foi executado à mão | Passou (execução manual, 07/10/2026): depois de remover o BEMVINDO10, o campo voltou; o VERAO2026 mostrou "Cupom expirado.", com subtotal e total de R$ 239,70 | [`manual/CT-03_chrome.gif`](05-evidencias/manual/CT-03_chrome.gif) |
 | CT-20 | Frete grátis com subtotal de exatamente R$ 200,00 | 4-01 | **Falhou (BUG-01)**: frete R$ 19,90, total R$ 219,90 e "Faltam R$ 0,00 para o frete grátis." | `exploracao/EXP-4-01_frete-200-payload.png`, `exploracao/EXP-4-01_frete-200-response.png` |
 | CT-21 | Frete cobrado e aviso de R$ 0,10 com subtotal de R$ 199,90 | 4-02 | Passou: frete R$ 19,90 e faltam R$ 0,10 | só registro em texto |
-| CT-22 | Frete passa a ser grátis ao aumentar a quantidade no carrinho | nenhum (a exploração não cruzou o limite pelo botão +) | **a executar** | — |
+| CT-22 | Frete passa a ser grátis ao aumentar a quantidade no carrinho | nenhum (a exploração não cruzou o limite pelo botão +); executado à mão | Passou (execução manual, 07/10/2026): com 3 camisetas, R$ 179,70 e "Faltam R$ 20,30"; depois do "+", quantidade 4, R$ 239,60, frete "Grátis" e sem o aviso | [`manual/CT-22_chrome.gif`](05-evidencias/manual/CT-22_chrome.gif) |
 | CT-50 | Carrinho trava o botão + ao chegar a 5 unidades | seção 2, "Limite de 5 unidades (CA10)" | Passou: com 5 unidades, o + fica desabilitado e aparece "Limite de 5 unidades por produto." | só registro em texto |
 | CT-51 | Vitrine trava o botão Adicionar ao carrinho ao chegar a 5 unidades | seção 1 (5º item) | Passou: o botão do produto fica desabilitado e o card mostra "Limite de 5 unidades atingido." | só registro em texto |
 | CT-60 | Compra completa com cupom, do carrinho à confirmação | seção 6 | Passou: P005 + BEMVINDO10 + Maria Silva → "Pedido confirmado", VZ-856317; subtotal 100,00, desconto 10,00, frete 19,90, total 109,90; "o pagamento será feito na entrega"; carrinho esvaziado | só registro em texto |
@@ -110,9 +110,9 @@ A exploração manual de 06/10/2026, feita no Google Chrome 154.0.8037.98 e regi
 | CT-61 · cep 7 dígitos | Dado do cliente inválido mostra a mensagem do campo e não confirma o pedido | 5-10 | Passou: "Informe um CEP com 8 dígitos." | só registro em texto |
 | CT-61 · cep 9 dígitos | Dado do cliente inválido mostra a mensagem do campo e não confirma o pedido | 5-11 | Passou: "Informe um CEP com 8 dígitos." | só registro em texto |
 
-### Passos dos cenários a executar
+### Cenários executados à mão (sem cobertura na exploração)
 
-Abra uma **nova janela anônima** (Ctrl+Shift+N) em https://verzel-store.qa-test-verzel-store.workers.dev/ para cada cenário: o carrinho fica guardado só na aba, então ele começa vazio. "Adicionar" = clicar em "Adicionar ao carrinho" no card do produto; cada clique soma 1 unidade. Salve o print em `docs/05-evidencias/manual/CT-XX_chrome154.png` e preencha o resultado na tabela acima.
+Abra uma **nova janela anônima** (Ctrl+Shift+N) em https://verzel-store.qa-test-verzel-store.workers.dev/ para cada cenário: o carrinho fica guardado só na aba, então ele começa vazio. "Adicionar" = clicar em "Adicionar ao carrinho" no card do produto; cada clique soma 1 unidade. As gravações estão em `docs/05-evidencias/manual/`.
 
 **CT-03 — Para trocar de cupom, o cliente remove o atual e aplica outro**
 1. Adicionar 1 Calça Jeans Slim e 2 Boné Aba Curva (2 cliques).
@@ -122,9 +122,17 @@ Abra uma **nova janela anônima** (Ctrl+Shift+N) em https://verzel-store.qa-test
 
 Esperado: depois do passo 3, o campo de cupom volta. No passo 4 aparece "Cupom expirado.", e o resumo mostra subtotal R$ 239,70 e total R$ 239,70, sem desconto.
 
+Resultado: **Passou**.
+
+![CT-03 executado no Chrome: remover o BEMVINDO10 e aplicar o VERAO2026](05-evidencias/manual/CT-03_chrome.gif)
+
 **CT-22 — Frete passa a ser grátis ao aumentar a quantidade no carrinho**
 1. Adicionar 3 Camiseta Essencial (3 cliques).
 2. Abrir o Carrinho no cabeçalho. Conferir: subtotal R$ 179,70, frete R$ 19,90 e o aviso "Faltam R$ 20,30 para o frete grátis.".
 3. Clicar uma vez no "+" da Camiseta Essencial.
 
 Esperado: quantidade 4, subtotal R$ 239,60, frete "Grátis", total R$ 239,60, e o aviso "Faltam R$ ..." some.
+
+Resultado: **Passou**.
+
+![CT-22 executado no Chrome: de 3 para 4 camisetas, o frete passa a ser grátis](05-evidencias/manual/CT-22_chrome.gif)
