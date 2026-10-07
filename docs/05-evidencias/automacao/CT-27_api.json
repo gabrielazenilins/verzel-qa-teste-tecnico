@@ -7,7 +7,7 @@
     "@automatizado",
     "@bug-01"
   ],
-  "executadoEm": "2026-10-07T21:40:30.780Z",
+  "executadoEm": "2026-10-07T21:52:00.819Z",
   "falha": {
     "mensagem": "Error: campo \"frete\"",
     "esperado": "0",
@@ -34,8 +34,8 @@
       },
       "status": 201,
       "resposta": {
-        "numero": "VZ-340909",
-        "criadoEm": "2026-10-07T21:40:31.420Z",
+        "numero": "VZ-040621",
+        "criadoEm": "2026-10-07T21:52:01.442Z",
         "cliente": {
           "nome": "Maria Silva",
           "email": "maria@exemplo.com",

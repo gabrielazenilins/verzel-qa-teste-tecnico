@@ -38,6 +38,7 @@ Skill específica deste repositório (teste técnico QA Júnior Verzel, card VZS
 | `CheckoutPage` | Finalizar compra | `/checkout` | `h1` = "Finalizar compra" |
 | `ConfirmationPage` | Pedido confirmado | `/pedido-confirmado` | `.confirmacao-selo` = "Pedido confirmado" |
 | `components/Header.js` | Cabeçalho | todas | links Produtos / Documentação / Carrinho e `.contador-carrinho` |
+| `components/Summary.js` | Resumo de valores | carrinho, checkout e confirmação | `[data-valor="subtotal|desconto|frete|total"]` (texto cru, convertido no step com `money.js`) |
 
 Comportamentos da interface (confirmados):
 - Não há página de produto nem escolha de quantidade na vitrine: cada clique em "Adicionar ao carrinho" soma 1 unidade e atualiza o aviso do card (ex.: "3 no carrinho"). Com 5 unidades, o botão do produto fica desabilitado e o aviso mostra "Limite de 5 unidades atingido.".
@@ -177,59 +178,35 @@ Then every monetary value in the response should have at most 2 decimal places
 | Checkout | confirmar | `getByRole('button', { name: 'Confirmar pedido' })` |
 | Confirmação | número do pedido | `.numero-pedido` (ex.: "VZ-856317") |
 
+Os Page Objects reais estão em `pages/`; o trecho abaixo resume o `CartPage` (veja o arquivo antes de acrescentar métodos):
 ```js
-const { BASE_URL } = require('../support/config')
-const { nomeDoProduto } = require('../support/produtos')
-
 class CartPage {
     constructor(page){
         this.page = page
-        this.heading        = page.getByRole('heading', { level: 1 })
-        this.couponInput    = page.locator('#campo-cupom')
-        this.applyCouponBtn = page.getByRole('button', { name: 'Aplicar cupom' })
-        this.removeCouponBtn= page.getByRole('button', { name: 'Remover cupom' })
-        this.couponMessage  = page.locator('#mensagem-cupom')
-        this.couponApplied  = page.locator('.cupom-aplicado')
-        this.subtotal       = page.locator('[data-valor="subtotal"]')
-        this.discount       = page.locator('[data-valor="desconto"]')
-        this.shipping       = page.locator('[data-valor="frete"]')
-        this.total          = page.locator('[data-valor="total"]')
-        this.shippingNotice = page.locator('.aviso-frete')
-        // aviso de limite: limitMessage(id) = .item-limite dentro do li.item-carrinho do produto (pages/CartPage.js)
-        this.checkoutLink   = page.getByRole('link', { name: 'Finalizar compra' })
+        this.heading         = page.getByRole('heading', { level: 1 })
+        this.couponInput     = page.locator('#campo-cupom')
+        this.applyCouponBtn  = page.getByRole('button', { name: 'Aplicar cupom' })
+        this.removeCouponBtn = page.getByRole('button', { name: 'Remover cupom' })
+        this.couponMessage   = page.locator('#mensagem-cupom')
+        this.couponApplied   = page.locator('.cupom-aplicado')
+        this.shippingNotice  = page.locator('.aviso-frete')
+        this.checkoutLink    = page.getByRole('link', { name: 'Finalizar compra' })
     }
-    async open(){
-        await this.page.goto(`${BASE_URL}/carrinho`)
-    }
-    increaseButton(id){
-        return this.page.getByRole('button', { name: `Aumentar quantidade de ${nomeDoProduto(id)}` })
-    }
-    decreaseButton(id){
-        return this.page.getByRole('button', { name: `Diminuir quantidade de ${nomeDoProduto(id)}` })
-    }
-    async increase(id, times = 1){
-        for (let i = 0; i < times; i++) await this.increaseButton(id).click()
-    }
-    async remove(id){
-        await this.page.getByRole('button', { name: `Remover ${nomeDoProduto(id)} do carrinho` }).click()
-    }
-    async applyCoupon(code){
-        await this.couponInput.fill(code)
-        await this.applyCouponBtn.click()
-    }
-    async removeCoupon(){
-        await this.removeCouponBtn.click()
-    }
-    async getTotalText(){
-        return this.total.innerText()
-    }
-    async goToCheckout(){
-        await this.checkoutLink.click()
-    }
+    item(id){ /* li.item-carrinho do produto */ }
+    limitMessage(id){ /* .item-limite dentro de item(id) */ }
+    increaseButton(id){ /* "Aumentar quantidade de <nome>" */ }
+    decreaseButton(id){ /* "Diminuir quantidade de <nome>" */ }
+    quantity(id){ /* <output> do grupo "Quantidade de <nome>" */ }
+    async increase(id){ /* um clique; o step espera a quantidade mudar */ }
+    async decrease(id){ /* idem */ }
+    async remove(id){ /* "Remover <nome> do carrinho" */ }
+    async applyCoupon(code){ /* preenche e clica em "Aplicar cupom" */ }
+    async removeCoupon(){ /* clica em "Remover cupom" */ }
+    async goToCheckout(){ /* clica em "Finalizar compra" */ }
 }
-module.exports = CartPage
 ```
-Atenção: cada clique em +, −, aplicar ou remover dispara `POST /api/carrinho/calcular`. Antes de ler valores, espere a resposta (`page.waitForResponse('**/api/carrinho/calcular')`) ou use asserções com espera automática (`toHaveText`). Nunca `waitForTimeout`.
+- **Valores** (subtotal, desconto, frete, total) **não** ficam no `CartPage`: estão em `pages/components/Summary.js` (`value(nome)` / `getValueText(nome)`), que serve ao carrinho, ao checkout e à confirmação. Não duplique esses localizadores nos Page Objects.
+- Cada clique em +, −, aplicar ou remover dispara `POST /api/carrinho/calcular`. Os steps esperam o efeito na tela antes de seguir: a quantidade mudar (+/−), o cupom aplicado ou a mensagem aparecer (aplicar cupom), o campo voltar (remover cupom). Valores são lidos com `expect.poll` + `parseMoney`, devolvendo o texto cru quando a conversão falha, para o poll tentar de novo. Nunca `waitForTimeout`.
 
 ## 5. Helpers (`support/`)
 - `money.js` → `parseMoney(texto)` converte os formatos exibidos na tela:
@@ -239,6 +216,7 @@ Atenção: cada clique em +, −, aplicar ou remover dispara `POST /api/carrinho
 - `produtos.js` → mapa id → nome (`P001` → `Camiseta Essencial` …), usado para montar os `aria-label`. Os dados vêm da tabela do `CLAUDE.md`.
 - `config.js` → `BASE_URL`.
 - `api.hooks.js` → `Before({ tags: '@api' })` cria os clientes de API com `request.newContext({ baseURL, extraHTTPHeaders: { 'Content-Type': 'application/json' } })`; `After({ tags: '@api' })` faz `dispose()`.
+- `ui.hooks.js` → `Before({ tags: '@ui' })` cria os Page Objects em `this.pages` (`catalog`, `cart`, `checkout`, `confirmation`, `header`, `summary`). Roda depois do `Before` do `world.js`, que abre o navegador.
 - `evidence.hooks.js` (já implementado) → num `After` para cenários `@ui`:
   - sempre que o cenário **falhar** ou tiver tag `@bug-XX`, tira `page.screenshot({ fullPage: true })`, anexa ao relatório com `this.attach(..., 'image/png')` e salva em `docs/05-evidencias/automacao/<CT-XX>_<navegador>_<status>.png` (ex.: `CT-20_chromium_falhou.png`);
   - o ID vem da tag `@CT-XX` do cenário (`pickle.tags`). Em `Scenario Outline`, acrescenta a posição do exemplo, contando todos os blocos `Examples` em ordem: `<CT-XX>-ex<N>_<navegador>_<status>.png` (ex.: `CT-02-ex2_chromium_falhou.png`). Assim cada exemplo tem o seu print, como cada um tem a sua linha no `docs/03-execucao.md`.

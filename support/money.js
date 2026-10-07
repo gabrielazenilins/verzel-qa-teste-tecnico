@@ -6,7 +6,8 @@ function parseMoney(text){
     if (typeof text === 'number') return text
     const raw = String(text).trim()
     if (/^grátis$/i.test(raw)) return 0
-    const clean = raw.replace(/\s|R\$|-/g, '')
+    // Remove espaços, "R$" e o sinal do desconto: hífen ASCII (o que a loja usa hoje) ou "−" (U+2212)
+    const clean = raw.replace(/\s|R\$|[-−]/g, '')
     const normalized = clean.includes(',')
         ? clean.replace(/\./g, '').replace(',', '.')
         : clean

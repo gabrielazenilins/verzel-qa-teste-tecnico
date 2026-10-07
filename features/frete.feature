@@ -19,7 +19,7 @@ Feature: Frete grátis
     And the total should be "200.00"
     And the free shipping notice should not be shown
 
-  # Interpretação (DOC-02): o texto do aviso "Faltam R$ X para o frete grátis." é o da interface
+  # Interpretação (DOC-02, DOC-15): o texto do aviso "Faltam R$ X para o frete grátis." é o da interface
   # (comportamento observado); a documentação só diz que o carrinho informa quanto falta.
   @CT-21 @CA07 @ui @automatizado
   Scenario: Frete cobrado e aviso de R$ 0,10 com subtotal de R$ 199,90

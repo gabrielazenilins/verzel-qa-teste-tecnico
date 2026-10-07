@@ -13,7 +13,7 @@
 - **Regra:** CA06 ("O frete é grátis para compras com subtotal a partir de R$ 200,00, inclusive") e tabela de cálculo ("R$ 0,00 quando o subtotal é igual ou maior que R$ 200,00"). Afeta também o CA08: com cupom, o frete continua sendo cobrado (CT-25).
 - **Camada:** API (`POST /api/carrinho/calcular` e `POST /api/pedidos`), refletido na UI
 - **Cenários:** CT-20 (UI, CA06), CT-23 (API, CA06), CT-25 (API, CA08, com cupom) e CT-27 (API, `/api/pedidos`), em `features/frete.feature`
-- **Ambiente:** https://verzel-store.qa-test-verzel-store.workers.dev · Google Chrome 154.0.8037.98 (exploração, 06/10/2026) · Chromium, Firefox e WebKit via Playwright (automação, 07/10/2026)
+- **Ambiente:** https://verzel-store.qa-test-verzel-store.workers.dev · Google Chrome 154.0.8037.98 (exploração, 06/10/2026) · Chromium 153.0.8010.12, Firefox 155.0 e WebKit 26.6 via Playwright 1.63 (automação, 07/10/2026)
 - **Navegadores:** o defeito ocorre nos três navegadores automatizados (CT-20 falhou em Chromium, Firefox e WebKit). Como o valor errado vem da API, não depende do navegador.
 
 **Passos para reproduzir**

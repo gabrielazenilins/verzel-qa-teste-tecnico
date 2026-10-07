@@ -304,6 +304,7 @@ Cada item termina com a interpretação que adotei e como pretendo testar.
 - **Exploração:** com subtotal de R$ 209,80 (caso 4-08), o frete aparece como "Grátis" e o aviso some. Com R$ 200,00 (BUG-01), a tela mostra "Faltam R$ 0,00 para o frete grátis." junto do frete cobrado.
 - **Interpretação:** com frete grátis, o valor do frete aparece como "Grátis" e o aviso "Faltam R$ X" não é exibido. "Faltam R$ 0,00" não é o comportamento esperado. Na API, o mesmo caso devolve `valorFaltanteFreteGratis: 0`.
 - **Teste:** CT-20 e CT-22 verificam na tela que o aviso não aparece; CT-23 verifica o faltante zero na API com subtotal de exatamente R$ 200,00 (e o CT-24, acima do limite).
+- **Texto do aviso:** a documentação só diz que "o carrinho informa quanto falta", sem definir o texto. Como na DOC-09, o texto observado na exploração ("Faltam R$ X para o frete grátis.") é usado como referência no CT-21. Se o texto mudar, o teste quebra, mas isso não é necessariamente um bug.
 
 #### DOC-16 — Quantidade enviada como texto
 - **Documentação:** `QUANTIDADE_INVALIDA` quando "a quantidade não é um número inteiro maior ou igual a 1". Não diz o que acontece com um número enviado como texto (`"quantidade": "2"`).

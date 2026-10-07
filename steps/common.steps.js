@@ -150,8 +150,12 @@ When('I add {string} to the cart {int} time(s)', async function(produto, vezes){
 
 // ---------------------------------------------------------------- UI: ações no carrinho e no checkout
 
+// Espera a resposta aparecer na tela (cupom aplicado ou mensagem com texto) antes do próximo passo;
+// sem isso, ir para o checkout logo em seguida pode abrir a tela antes do recálculo com o cupom.
 When('I apply the coupon {string}', async function(cupom){
-    await this.pages.cart.applyCoupon(cupom)
+    const { cart } = this.pages
+    await cart.applyCoupon(cupom)
+    await expect(cart.couponApplied.or(cart.couponMessage.filter({ hasText: /\S/ }))).toBeVisible()
 })
 
 When('I remove the coupon', async function(){
@@ -199,9 +203,17 @@ When('I confirm the order', async function(){
 // ---------------------------------------------------------------- UI: verificações
 
 // Valores da tela convertidos com money.js; expect.poll espera o recálculo do carrinho terminar.
+// Se o texto ainda não for um valor (vazio durante o recálculo), devolve o texto cru para o poll tentar de novo:
+// um erro lançado dentro do poll faria o passo falhar na hora.
 async function expectSummaryValue(world, nome, esperado){
-    await expect.poll(async () => parseMoney(await world.pages.summary.getValueText(nome)), { message: `valor "${nome}" na tela` })
-        .toBe(Number(esperado))
+    await expect.poll(async () => {
+        const texto = await world.pages.summary.getValueText(nome)
+        try {
+            return parseMoney(texto)
+        } catch {
+            return texto
+        }
+    }, { message: `valor "${nome}" na tela` }).toBe(Number(esperado))
 }
 
 Then('the subtotal should be {string}', async function(valor){
@@ -230,6 +242,8 @@ Then('the free shipping notice should be {string}', async function(texto){
     await expect(this.pages.cart.shippingNotice).toHaveText(texto)
 })
 
+// Verificação negativa: passa logo se o aviso não existir. Nos cenários, vem depois de um passo de valor
+// (subtotal/total), que já esperou o recálculo terminar.
 Then('the free shipping notice should not be shown', async function(){
     await expect(this.pages.cart.shippingNotice).toHaveCount(0)
 })
@@ -263,6 +277,7 @@ Then('the add button of {string} should be disabled', async function(produto){
 
 // Só verifica que o aviso de limite aparece (classe produto-aviso-limite), sem cobrar o texto (DOC-02).
 Then('I should see the limit notice of {string} on the products page', async function(produto){
+    await expect(this.pages.catalog.notice(produto)).toBeVisible()
     await expect(this.pages.catalog.notice(produto)).toHaveClass(/produto-aviso-limite/)
 })
 
@@ -270,9 +285,11 @@ Then('the field {string} should show the error {string}', async function(campo, 
     await expect(this.pages.checkout.fieldError(campo)).toHaveText(mensagem)
 })
 
+// Não depende da ordem dos passos: além de continuar em /checkout, o selo de pedido confirmado não pode aparecer.
 Then('I should still be on the checkout page', async function(){
     await expect(this.page).toHaveURL(/\/checkout$/)
     await expect(this.pages.checkout.heading).toHaveText('Finalizar compra')
+    await expect(this.pages.confirmation.seal).toHaveCount(0)
 })
 
 Then('I should see the order confirmation with a number in the format VZ-000000', async function(){
