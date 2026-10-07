@@ -45,7 +45,7 @@ Automatizo com Playwright + Cucumber. Marco como `@manual` só o que não compen
 
 ## Mapa de cenários
 
-Ver docs/02-matriz-rastreabilidade.md (a ser criada com as features)
+Ver [02-matriz-rastreabilidade.md](02-matriz-rastreabilidade.md): cada regra (CA01 a CA11, regras da loja e contrato da API) × cenários de UI e de API, com o resultado e o bug.
 
 ## Dados de teste e valores-limite
 
@@ -106,7 +106,7 @@ Cada navegador gera o seu relatório em `reports/cucumber-report-<navegador>.htm
 |---|---|
 | [00-exploracao.md](00-exploracao.md) | Exploração manual, observações e análise da documentação (DOC-01 a DOC-17) |
 | [01-plano-de-teste.md](01-plano-de-teste.md) | Este plano |
-| 02-matriz-rastreabilidade.md | Critério × cenário × camada (a ser criada) |
+| [02-matriz-rastreabilidade.md](02-matriz-rastreabilidade.md) | Regra × cenário × camada, com resultado e bug |
 | [03-execucao.md](03-execucao.md) | Resultado de cada cenário |
 | [04-bugs.md](04-bugs.md) | Bugs com passos, esperado × obtido e evidência |
 | [05-evidencias/](05-evidencias/) | Prints e respostas da API |

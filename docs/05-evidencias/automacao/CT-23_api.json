@@ -7,7 +7,7 @@
     "@automatizado",
     "@bug-01"
   ],
-  "executadoEm": "2026-10-07T21:51:59.719Z",
+  "executadoEm": "2026-10-07T22:01:44.694Z",
   "falha": {
     "mensagem": "Error: campo \"frete\"",
     "esperado": "0",
