@@ -23,7 +23,7 @@ Skill específica deste repositório (teste técnico QA Júnior Verzel, card VZS
 
 ## 1. Stack e configuração
 - Playwright + Cucumber, JavaScript **CommonJS** (`require` / `module.exports`).
-- `support/world.js` abre e fecha o navegador por cenário, escolhido pela variável `BROWSER` (`chromium` é o padrão, ou `firefox`/`webkit`). Para rodar nos três: `npm run test:all`. Cada cenário começa com contexto novo, portanto **carrinho vazio** (o carrinho fica só na aba). Não crie passos de "limpar carrinho".
+- `support/world.js` abre e fecha o navegador por cenário, escolhido pela variável `BROWSER` (`chromium` é o padrão, ou `firefox`/`webkit`). Para rodar nos três: `npm run test:all` (o Chromium roda tudo; Firefox e WebKit só os `@ui`, porque a API não depende de navegador). Cada cenário começa com contexto novo, portanto **carrinho vazio** (o carrinho fica só na aba). Não crie passos de "limpar carrinho".
 - `support/config.js` exporta `BASE_URL` (`process.env.BASE_URL` com fallback para a URL da loja). Nunca escreva a URL em outro arquivo.
 - `cucumber.js` exclui `@manual` da execução (`tags: 'not @manual'`), carrega o `world.js` antes dos outros arquivos de `support/` (assim o `After` que fecha o navegador roda por último) e gera um relatório por navegador (`reports/cucumber-report-<navegador>.html`).
 - Não altere `world.js`, `config.js` nem `cucumber.js` sem perguntar.
@@ -242,6 +242,9 @@ Atenção: cada clique em +, −, aplicar ou remover dispara `POST /api/carrinho
   - sempre que o cenário **falhar** ou tiver tag `@bug-XX`, tira `page.screenshot({ fullPage: true })`, anexa ao relatório com `this.attach(..., 'image/png')` e salva em `docs/05-evidencias/automacao/<CT-XX>_<navegador>_<status>.png` (ex.: `CT-20_chromium_falhou.png`);
   - o ID vem da tag `@CT-XX` do cenário (`pickle.tags`). Em `Scenario Outline`, acrescenta a posição do exemplo, contando todos os blocos `Examples` em ordem: `<CT-XX>-ex<N>_<navegador>_<status>.png` (ex.: `CT-02-ex2_chromium_falhou.png`). Assim cada exemplo tem o seu print, como cada um tem a sua linha no `docs/03-execucao.md`.
   Assim cada execução gera a evidência do bug sem print manual.
+  - em cenário `@api` que **falhou** e tem `@bug-XX`, salva todas as requisições e respostas do cenário, com o esperado × obtido, em `docs/05-evidencias/automacao/<CT-XX>_api.json` (Outline: `<CT-XX>-ex<N>_api.json`). A pasta `reports/` não vai para o repositório; esse arquivo é a evidência versionada.
+- `response.js` → guarda a resposta no World (`this.response`, `this.responseBody`, `this.exchanges`) e anexa requisição + resposta ao relatório em toda chamada de API.
+- `scenario-id.js` → monta o ID usado nos nomes de evidência (`CT-XX` ou `CT-XX-ex<N>`).
 
 ## 6. Escrevendo cenários
 - Toda tag de cenário: `@CT-XX @CAXX @ui|@api @manual|@automatizado`. Quando nenhum critério CA se aplica, use no lugar do `@CAXX`:
@@ -312,10 +315,10 @@ O exemplo resume `features/frete.feature`; lá estão os cenários completos.
      - Passos para reproduzir: 1. ... 2. ...
      - Resultado esperado: ... (cite a documentação)
      - Resultado obtido: ...
-     - Evidência: docs/05-evidencias/CT-XX_<descricao>.png
+     - Evidência: docs/05-evidencias/automacao/<CT-XX>_<navegador>_falhou.png (UI) ou docs/05-evidencias/automacao/<CT-XX>_api.json (API); em Outline, <CT-XX>-ex<N>
      ```
-  3. Atualize a linha do cenário em `docs/03-execucao.md`: `| CT-XX | título | CAXX | UI/API | manual/automatizado | Passou/Falhou/Bloqueado | evidência | BUG-XX |`. Em `Scenario Outline`, use **uma linha por exemplo** (ex.: `CT-24 · 199,90`), para cada resultado ter evidência própria.
-- Evidências em `docs/05-evidencias/`, nome `CT-XX_<descricao>.png` (ou `.json` para respostas de API).
+  3. Atualize a linha do cenário em `docs/03-execucao.md`: `| CT-XX | título | CAXX | UI/API | manual/automatizado | <Chromium> | <Firefox> | <WebKit> | evidência | BUG-XX |`, com Passou/Falhou/Bloqueado em cada navegador ("—" = não executado). Cenários de API rodam só pelo Chromium e ficam com "—" no Firefox e no WebKit. Em `Scenario Outline`, use **uma linha por exemplo** (ex.: `CT-24 · 199,90`), para cada resultado ter evidência própria.
+- Evidências automáticas em `docs/05-evidencias/automacao/` (seção 5); prints e chamadas manuais em `docs/05-evidencias/exploracao/`.
 
 ## 8. Resumo ao terminar
 - Arquivos criados ou alterados.

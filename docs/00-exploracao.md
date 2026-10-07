@@ -220,6 +220,14 @@ Cada item termina com a interpretação que adotei e como pretendo testar.
 - **Problema:** não fica claro se esse erro tem um formato diferente (uma lista em `campos`), se usa o mesmo `campo` de sempre, ou se traz os dois. Quem consome a API não sabe onde ler os detalhes.
 - **Interpretação:** o `DADOS_INVALIDOS` traz uma lista em `erro.campos` com os campos inválidos, e os demais erros usam `erro.campo`.
 - **Teste:** CT-63 (`features/checkout.feature`) envia nome, e-mail e CEP inválidos, cobra o status 422 e o código `DADOS_INVALIDOS` e anexa a resposta ao relatório, para registrar se vem `campo` ou `campos`. O formato não é cobrado; se vier diferente do documentado, entra como divergência de documentação.
+- **Execução (07/10/2026, CT-63):** confirmou a inconsistência da documentação. O `DADOS_INVALIDOS` **não** traz `erro.campo`; traz `erro.campos`, uma lista de objetos `{ campo, mensagem }`, um por dado inválido:
+  ```json
+  { "erro": { "codigo": "DADOS_INVALIDOS", "mensagem": "Existem campos inválidos no pedido.",
+      "campos": [ { "campo": "cliente.nome",  "mensagem": "Informe nome e sobrenome." },
+                  { "campo": "cliente.email", "mensagem": "Informe um e-mail válido." },
+                  { "campo": "cliente.cep",   "mensagem": "Informe um CEP com 8 dígitos." } ] } }
+  ```
+  O formato geral de erro da documentação (`campo` como texto) não vale para esse código, e a lista de objetos não aparece em nenhum exemplo. As mensagens são as mesmas que a tela mostra no checkout.
 
 #### DOC-02 — "A interface apenas exibe o resultado", mas as mensagens são outras
 - **Documentação:** "Os cálculos são feitos pela API e a interface apenas exibe o resultado."
@@ -297,6 +305,20 @@ Cada item termina com a interpretação que adotei e como pretendo testar.
 - **Interpretação:** com frete grátis, o valor do frete aparece como "Grátis" e o aviso "Faltam R$ X" não é exibido. "Faltam R$ 0,00" não é o comportamento esperado. Na API, o mesmo caso devolve `valorFaltanteFreteGratis: 0`.
 - **Teste:** CT-20 e CT-22 verificam na tela que o aviso não aparece; CT-23 verifica o faltante zero na API com subtotal de exatamente R$ 200,00 (e o CT-24, acima do limite).
 
+#### DOC-16 — Quantidade enviada como texto
+- **Documentação:** `QUANTIDADE_INVALIDA` quando "a quantidade não é um número inteiro maior ou igual a 1". Não diz o que acontece com um número enviado como texto (`"quantidade": "2"`).
+- **Problema:** a API pode recusar o texto ou convertê-lo para número e aceitar o pedido. As duas leituras são possíveis.
+- **Interpretação:** `"2"` como texto é recusado com `QUANTIDADE_INVALIDA`, sem conversão. A regra fala em "número inteiro", e em todos os exemplos da documentação a quantidade é um número JSON.
+- **Teste:** CT-52 · `"2"` (`features/quantidade.feature`).
+- **Execução (07/10/2026):** **confirmada**. A API recusou `"2"` com 422 `QUANTIDADE_INVALIDA` no campo `itens[0].quantidade`.
+
+#### DOC-17 — Campo do erro de quantidade acima do limite
+- **Documentação:** o único exemplo de erro com `campo` é o de `QUANTIDADE_INVALIDA`, com `"campo": "itens[0].quantidade"`. Para `QUANTIDADE_MAXIMA_EXCEDIDA`, a tabela só traz o código e a descrição ("a quantidade de um produto é maior que 5").
+- **Problema:** não fica definido qual `campo` acompanha o erro de quantidade acima do limite.
+- **Interpretação:** segue o mesmo formato do exemplo, `"campo": "itens[0].quantidade"`, porque o erro é sobre o mesmo dado.
+- **Teste:** CT-52 · 6 e CT-53 (`features/quantidade.feature`).
+- **Execução (07/10/2026):** ainda não dá para conferir. Por causa do BUG-03, a API aceita as 6 unidades (200 em `/carrinho/calcular` e 201 em `/api/pedidos`) e não devolve erro nenhum, então não há `erro.campo` para comparar. A interpretação volta a ser verificada quando o BUG-03 for corrigido.
+
 ---
 
 ### Pontos difíceis de testar
@@ -322,7 +344,7 @@ Cada item termina com a interpretação que adotei e como pretendo testar.
 
 | ID | Tipo | Assunto | Interpretação adotada |
 |---|---|---|---|
-| DOC-01 | Inconsistência | `campo` × `campos` em `DADOS_INVALIDOS` | lista em `erro.campos`; conferir a resposta real |
+| DOC-01 | Inconsistência | `campo` × `campos` em `DADOS_INVALIDOS` | confirmada na execução: `erro.campos` é uma lista de `{ campo, mensagem }` |
 | DOC-02 | Inconsistência | Interface com textos próprios | valores vêm da API; textos só onde a documentação define |
 | DOC-03 | Inconsistência | CEP normalizado sem regra | aceito com ou sem hífen, devolvido só com números |
 | DOC-04 | Inconsistência | Mesmo código com 404 e 422 | correto; testar código e status juntos |
@@ -337,3 +359,5 @@ Cada item termina com a interpretação que adotei e como pretendo testar.
 | DOC-13 | Difícil de testar | Data de validade | limite de data não testável |
 | DOC-14 | Difícil de testar | 422 de cupom em `/pedidos` | só pela API |
 | DOC-15 | Lacuna | Aviso de frete com frete grátis | "Grátis" no frete e sem o aviso "Faltam R$ X" |
+| DOC-16 | Lacuna | Quantidade enviada como texto | `"2"` é recusado com `QUANTIDADE_INVALIDA`, sem conversão (confirmada na execução) |
+| DOC-17 | Lacuna | `campo` em `QUANTIDADE_MAXIMA_EXCEDIDA` | `itens[0].quantidade`, como no exemplo de `QUANTIDADE_INVALIDA` |

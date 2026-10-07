@@ -127,9 +127,9 @@ Feature: Frete grátis
 
   # ---------------------------------------------------------------- API (POST /api/pedidos)
 
-  # O BUG-01 foi confirmado em /carrinho/calcular. Aqui ainda não sei se o pedido repete o erro;
-  # a tag @bug-01 só entra se este cenário falhar.
-  @CT-27 @CA06 @api @automatizado
+  # O BUG-01 também chega ao pedido: na execução de 07/10/2026, o pedido saiu com 201, frete 19,9
+  # e total 219,9 (evidência em docs/05-evidencias/automacao/CT-27_api.json; o número do pedido muda a cada execução).
+  @CT-27 @CA06 @api @automatizado @bug-01
   Scenario: Pedido com subtotal de exatamente R$ 200,00 sai com frete grátis
     Given the cart items:
       | produto | quantidade |

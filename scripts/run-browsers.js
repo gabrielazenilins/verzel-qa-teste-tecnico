@@ -17,10 +17,15 @@ if (!browsers.length || invalid.length){
     process.exit(2)
 }
 
+// Os cenários de API não dependem de navegador: rodam só no Chromium.
+// No Firefox e no WebKit, só os @ui (o Cucumber junta as --tags com "and", inclusive o "not @manual" do cucumber.js).
+const UI_ONLY = ['firefox', 'webkit']
+
 const cucumberBin = path.join(__dirname, '..', 'node_modules', '@cucumber', 'cucumber', 'bin', 'cucumber.js')
 const results = browsers.map(browser => {
-    console.log(`\n===== ${browser} =====`)
-    const run = spawnSync(process.execPath, [cucumberBin, ...cucumberArgs], {
+    console.log(`\n===== ${browser}${UI_ONLY.includes(browser) ? ' (só @ui)' : ''} =====`)
+    const args = UI_ONLY.includes(browser) ? [...cucumberArgs, '--tags', '@ui'] : cucumberArgs
+    const run = spawnSync(process.execPath, [cucumberBin, ...args], {
         stdio: 'inherit',
         env: { ...process.env, BROWSER: browser }
     })

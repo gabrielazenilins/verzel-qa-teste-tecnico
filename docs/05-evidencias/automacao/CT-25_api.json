@@ -1,0 +1,56 @@
+{
+  "cenario": "API mantém frete grátis quando o cupom deixa o valor em R$ 180,00",
+  "tags": [
+    "@CT-25",
+    "@CA08",
+    "@api",
+    "@automatizado",
+    "@bug-01"
+  ],
+  "executadoEm": "2026-10-07T21:32:43.619Z",
+  "falha": {
+    "mensagem": "Error: campo \"frete\"",
+    "esperado": "0",
+    "obtido": "19.9"
+  },
+  "chamadas": [
+    {
+      "requisicao": {
+        "metodo": "POST",
+        "rota": "/api/carrinho/calcular",
+        "corpo": {
+          "itens": [
+            {
+              "produtoId": "P005",
+              "quantidade": 2
+            }
+          ],
+          "cupom": "BEMVINDO10"
+        }
+      },
+      "status": 200,
+      "resposta": {
+        "itens": [
+          {
+            "produtoId": "P005",
+            "nome": "Mochila Urbana 20L",
+            "precoUnitario": 100,
+            "quantidade": 2,
+            "total": 200
+          }
+        ],
+        "subtotal": 200,
+        "desconto": 20,
+        "frete": 19.9,
+        "freteGratis": false,
+        "valorFaltanteFreteGratis": 0,
+        "total": 199.9,
+        "cupom": {
+          "codigo": "BEMVINDO10",
+          "aplicado": true,
+          "mensagem": "Cupom aplicado: 10% de desconto nos produtos."
+        }
+      }
+    }
+  ]
+}

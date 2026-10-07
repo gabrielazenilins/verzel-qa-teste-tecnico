@@ -62,8 +62,8 @@ Feature: Checkout e confirmação do pedido
       | 01310100  |
 
   # Interpretação (DOC-01): a documentação diz que os detalhes vêm em "campos", mas o formato geral de erro
-  # usa "campo". O cenário cobra o status e o código e anexa o erro ao relatório, para registrar qual dos
-  # dois vem de fato; a diferença, se houver, entra como divergência de documentação.
+  # usa "campo". A execução de 07/10/2026 confirmou "campos": uma lista de { campo, mensagem }, um por dado
+  # inválido, sem "erro.campo". O cenário cobra esse formato pelo primeiro item da lista.
   @CT-63 @regra-loja @api @automatizado
   Scenario: API recusa pedido com dados do cliente inválidos
     Given the cart items:
@@ -74,3 +74,4 @@ Feature: Checkout e confirmação do pedido
     And I attach the response to the report
     Then the response status should be 422
     And the response field "erro.codigo" should be "DADOS_INVALIDOS"
+    And the response field "erro.campos.0.campo" should be "cliente.nome"

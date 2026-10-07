@@ -28,8 +28,8 @@ Feature: Limite de quantidade por produto
 
   # A coluna "quantidade" é lida como valor JSON: 1.5 vai como número decimal e "2" (com aspas) vai como texto.
   # Na linha aceita (5), "campo"/"valor" conferem o subtotal; nas recusadas, o código e o campo do erro.
-  # Interpretação: "2" como texto é recusado, sem conversão para número ("a quantidade não é um número inteiro").
-  # Interpretação: em QUANTIDADE_MAXIMA_EXCEDIDA, erro.campo segue o exemplo da documentação para
+  # Interpretação (DOC-16): "2" como texto é recusado, sem conversão para número ("a quantidade não é um número inteiro").
+  # Interpretação (DOC-17): em QUANTIDADE_MAXIMA_EXCEDIDA, erro.campo segue o exemplo da documentação para
   # QUANTIDADE_INVALIDA ("itens[0].quantidade"), o único código com exemplo de campo.
   @CT-52 @CA10 @api @automatizado
   Scenario Outline: API aceita até 5 unidades e recusa quantidade acima do limite ou inválida
@@ -45,6 +45,7 @@ Feature: Limite de quantidade por produto
       | quantidade | status | campo    | valor  | campo2 | valor2 |
       | 5          | 200    | subtotal | 299.50 | total  | 299.50 |
 
+    @bug-03
     Examples: Acima do limite
       | quantidade | status | campo       | valor                      | campo2     | valor2              |
       | 6          | 422    | erro.codigo | QUANTIDADE_MAXIMA_EXCEDIDA | erro.campo | itens[0].quantidade |
@@ -55,3 +56,18 @@ Feature: Limite de quantidade por produto
       | -1         | 422    | erro.codigo | QUANTIDADE_INVALIDA | erro.campo | itens[0].quantidade |
       | 1.5        | 422    | erro.codigo | QUANTIDADE_INVALIDA | erro.campo | itens[0].quantidade |
       | "2"        | 422    | erro.codigo | QUANTIDADE_INVALIDA | erro.campo | itens[0].quantidade |
+
+  # ---------------------------------------------------------------- API (POST /api/pedidos)
+
+  # O limite também precisa valer no pedido: é aqui que o pedido é confirmado.
+  # Interpretação (DOC-17): erro.campo = "itens[0].quantidade", como no CT-52.
+  @CT-53 @CA10 @api @automatizado @bug-03
+  Scenario: Pedido com mais de 5 unidades de um produto é recusado
+    Given the cart items:
+      | produto | quantidade |
+      | P001    | 6          |
+    And the customer with name "Maria Silva", email "maria@exemplo.com" and zip code "01310-100"
+    When I create the order via API
+    Then the response status should be 422
+    And the response field "erro.codigo" should be "QUANTIDADE_MAXIMA_EXCEDIDA"
+    And the response field "erro.campo" should be "itens[0].quantidade"

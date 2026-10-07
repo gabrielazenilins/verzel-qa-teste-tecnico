@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Verificar se a entrega do card VZS-142 (v2.3.0), que trata de cupom de desconto e frete grátis, atende aos critérios CA01 a CA11 na interface e na API. Também testo o checkout, porque é nele que o total calculado vira pedido. As regras estão na [documentação](referencias/documentacao-v2.3.0.md) e não repito aqui. Quando a documentação deixa dúvida, sigo a interpretação registrada em [Análise da documentação](00-exploracao.md#análise-da-documentação) (DOC-01 a DOC-15).
+Verificar se a entrega do card VZS-142 (v2.3.0), que trata de cupom de desconto e frete grátis, atende aos critérios CA01 a CA11 na interface e na API. Também testo o checkout, porque é nele que o total calculado vira pedido. As regras estão na [documentação](referencias/documentacao-v2.3.0.md) e não repito aqui. Quando a documentação deixa dúvida, sigo a interpretação registrada em [Análise da documentação](00-exploracao.md#análise-da-documentação) (DOC-01 a DOC-17).
 
 ## Escopo
 
@@ -75,8 +75,8 @@ Os produtos, preços e cupons são fixos (tabela em [CLAUDE.md](../CLAUDE.md#dad
 ```
 npm install                          # instala as dependências e os três navegadores
 npm test                             # tudo, menos @manual, no Chromium
-npm run test:firefox                 # tudo no Firefox (também test:chromium e test:webkit)
-npm run test:all                     # Chromium, Firefox e WebKit, um depois do outro
+npm run test:firefox                 # só os @ui no Firefox (test:webkit idem; test:chromium roda tudo)
+npm run test:all                     # Chromium com tudo; Firefox e WebKit só com @ui (a API roda uma vez)
 npm run test:api                     # só API
 npm run test:ui                      # só UI
 npx cucumber-js --tags "@CT-24"      # um cenário
@@ -104,7 +104,7 @@ Cada navegador gera o seu relatório em `reports/cucumber-report-<navegador>.htm
 
 | Documento | Conteúdo |
 |---|---|
-| [00-exploracao.md](00-exploracao.md) | Exploração manual, observações e análise da documentação (DOC-01 a DOC-15) |
+| [00-exploracao.md](00-exploracao.md) | Exploração manual, observações e análise da documentação (DOC-01 a DOC-17) |
 | [01-plano-de-teste.md](01-plano-de-teste.md) | Este plano |
 | 02-matriz-rastreabilidade.md | Critério × cenário × camada (a ser criada) |
 | [03-execucao.md](03-execucao.md) | Resultado de cada cenário |

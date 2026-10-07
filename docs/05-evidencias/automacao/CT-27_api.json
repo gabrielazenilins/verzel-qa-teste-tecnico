@@ -1,0 +1,63 @@
+{
+  "cenario": "Pedido com subtotal de exatamente R$ 200,00 sai com frete grátis",
+  "tags": [
+    "@CT-27",
+    "@CA06",
+    "@api",
+    "@automatizado",
+    "@bug-01"
+  ],
+  "executadoEm": "2026-10-07T21:32:43.984Z",
+  "falha": {
+    "mensagem": "Error: campo \"frete\"",
+    "esperado": "0",
+    "obtido": "19.9"
+  },
+  "chamadas": [
+    {
+      "requisicao": {
+        "metodo": "POST",
+        "rota": "/api/pedidos",
+        "corpo": {
+          "itens": [
+            {
+              "produtoId": "P005",
+              "quantidade": 2
+            }
+          ],
+          "cliente": {
+            "nome": "Maria Silva",
+            "email": "maria@exemplo.com",
+            "cep": "01310-100"
+          }
+        }
+      },
+      "status": 201,
+      "resposta": {
+        "numero": "VZ-158721",
+        "criadoEm": "2026-10-07T21:32:44.640Z",
+        "cliente": {
+          "nome": "Maria Silva",
+          "email": "maria@exemplo.com",
+          "cep": "01310100"
+        },
+        "itens": [
+          {
+            "produtoId": "P005",
+            "nome": "Mochila Urbana 20L",
+            "precoUnitario": 100,
+            "quantidade": 2,
+            "total": 200
+          }
+        ],
+        "subtotal": 200,
+        "desconto": 0,
+        "frete": 19.9,
+        "freteGratis": false,
+        "valorFaltanteFreteGratis": 0,
+        "total": 219.9,
+        "cupom": null
+      }
+    }
+  ]
+}

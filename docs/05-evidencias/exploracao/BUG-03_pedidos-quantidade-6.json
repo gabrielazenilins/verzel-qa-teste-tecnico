@@ -1,0 +1,13 @@
+{
+  "descricao": "Verificação manual em 07/10/2026: POST /api/pedidos com P001 x 6 (BUG-03)",
+  "requisicao": {
+    "metodo": "POST",
+    "rota": "/api/pedidos",
+    "corpo": {
+      "itens": [{ "produtoId": "P001", "quantidade": 6 }],
+      "cliente": { "nome": "Maria Silva", "email": "maria@exemplo.com", "cep": "01310-100" }
+    }
+  },
+  "status": 201,
+  "resposta": {"numero":"VZ-168925","criadoEm":"2026-10-07T21:22:55.755Z","cliente":{"nome":"Maria Silva","email":"maria@exemplo.com","cep":"01310100"},"itens":[{"produtoId":"P001","nome":"Camiseta Essencial","precoUnitario":59.9,"quantidade":6,"total":359.4}],"subtotal":359.4,"desconto":0,"frete":0,"freteGratis":true,"valorFaltanteFreteGratis":0,"total":359.4,"cupom":null}
+}
