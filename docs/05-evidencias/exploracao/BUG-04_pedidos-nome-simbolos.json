@@ -1,0 +1,13 @@
+{
+  "descricao": "Verificação manual em 07/10/2026: POST /api/pedidos com nome só com símbolos (BUG-04)",
+  "requisicao": {
+    "metodo": "POST",
+    "rota": "/api/pedidos",
+    "corpo": {
+      "itens": [{ "produtoId": "P005", "quantidade": 1 }],
+      "cliente": { "nome": "@@ @@", "email": "maria@exemplo.com", "cep": "01310-100" }
+    }
+  },
+  "status": 201,
+  "resposta": {"numero":"VZ-531910","criadoEm":"2026-10-08T02:17:08.684Z","cliente":{"nome":"@@ @@","email":"maria@exemplo.com","cep":"01310100"},"itens":[{"produtoId":"P005","nome":"Mochila Urbana 20L","precoUnitario":100,"quantidade":1,"total":100}],"subtotal":100,"desconto":0,"frete":19.9,"freteGratis":false,"valorFaltanteFreteGratis":100,"total":119.9,"cupom":null}
+}

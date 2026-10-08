@@ -8,7 +8,7 @@ Antes de escrever os cenários, naveguei pela loja como um cliente para entender
 
 Os prints estão em `docs/05-evidencias/exploracao/` e os bugs, detalhados em [04-bugs.md](04-bugs.md). No fim do arquivo está a análise da documentação, com as inconsistências que encontrei e a interpretação que adotei em cada uma.
 
-**O que encontrei, em resumo:** quase tudo se comportou como a documentação descreve. O problema principal está no frete: com subtotal de exatamente R$ 200,00, a loja ainda cobra R$ 19,90 (BUG-01). Também anotei um problema de layout no celular (BUG-02), que fica fora do escopo do card, e algumas observações. Depois, em 07/10, a automação da API encontrou o BUG-03: a API aceita mais de 5 unidades por produto, embora a tela trave em 5.
+**O que encontrei, em resumo:** quase tudo se comportou como a documentação descreve. O problema principal está no frete: aplicando a técnica de valor limite com subtotal de exatamente R$ 200,00, a loja ainda cobra R$ 19,90 (BUG-01). Também anotei um problema de layout em larguras pequenas (BUG-02), que fica fora do escopo do card, e algumas observações. Depois, em 07/10, a automação da API encontrou o BUG-03: a API aceita mais de 5 unidades por produto, embora a tela trave em 5. Numa exploração complementar, no mesmo dia, encontrei o BUG-04: o checkout aceita um nome só com símbolos e confirma o pedido, e a API também aceita.
 
 ---
 
@@ -112,7 +112,19 @@ Apliquei `VERAO2026` no carrinho. A API respondeu 200 com `"aplicado": false` e 
 - Os links do cabeçalho funcionam em todas as telas.
 - Não apareceu nenhum erro no Console.
 - Não vi erro de digitação nem valores com casas decimais estranhas.
-- **No celular:** simulando o Pixel 9 e modelos dobráveis no DevTools, o cabeçalho fica só com a marca e o Carrinho. Os links Produtos e Documentação somem e não há menu para acessá-los. Na largura do iPad Mini o cabeçalho volta ao normal. Registrei como BUG-02, de severidade baixa, porque não faz parte da entrega de cupom e frete.
+- **No celular:** simulando o Pixel 9 e modelos dobráveis no DevTools, o cabeçalho fica só com a marca e o Carrinho. Os links Produtos e Documentação somem e não há menu para acessá-los. Na largura do iPad Mini o cabeçalho volta ao normal. Registrei como BUG-02, de severidade baixa, porque não faz parte da entrega de cupom e frete. Na exploração complementar (9-02), vi que o problema não é só de celular: acontece em qualquer largura pequena, inclusive ao estreitar a janela do navegador.
+
+## 9. Exploração complementar (07/10/2026)
+
+Depois da automação, voltei à loja no Google Chrome 154 para olhar casos de entrada de dados e de layout que tinham ficado de fora.
+
+| # | O que fiz | Esperado | O que aconteceu | Resultado |
+|---|---|---|---|---|
+| 9-01 | No checkout, nome `@@ @@`, com e-mail e CEP válidos | "Informe nome e sobrenome.": a regra pressupõe letras (DOC-08) | Aceitou cada grupo de símbolos como nome e sobrenome, e o pedido foi confirmado | **Falhou — BUG-04** |
+| 9-02 | Estreitar a janela do navegador, com o DevTools aberto ao lado | Cabeçalho com Produtos, Documentação e Carrinho acessíveis em qualquer largura | O mesmo problema do celular: os links Produtos e Documentação somem e não há menu alternativo | **Falhou — BUG-02** (ampliado) |
+| 9-03 | Digitar letras e mais de 9 caracteres no campo CEP | Campo limitado ao formato da dica ("Somente números ou no formato 00000-000.") | O campo aceita letras e não tem limite de caracteres; o erro só aparece ao confirmar | Observação — MEL-11 |
+
+Prints: `EXP-9-01_nome-simbolos.png`, `EXP-9-02_layout-largura-pequena.png` e `EXP-9-03_cep-letras-sem-limite.png`.
 
 ---
 
@@ -121,8 +133,9 @@ Apliquei `VERAO2026` no carrinho. A API respondeu 200 com `"aplicado": false` e 
 | ID | Tipo | O que é |
 |---|---|---|
 | BUG-01 | Bug (alta) | A API cobra frete com subtotal de exatamente R$ 200,00 (CA06) |
-| BUG-02 | Bug (baixa, fora do card) | O menu some em telas de celular |
+| BUG-02 | Bug (baixa, fora do card) | O layout quebra em larguras pequenas: no celular ou com a janela do navegador estreitada, o menu some |
 | BUG-03 | Bug (alta) | A API aceita mais de 5 unidades por produto (CA10). Encontrado em 07/10 pela automação da API |
+| BUG-04 | Bug (baixa) | O checkout aceita nome só com símbolos (`@@ @@`) como nome e sobrenome e confirma o pedido; a API também aceita (201). Encontrado em 07/10, na exploração complementar (9-01) |
 | OBS-01 | Observação | Cupom vazio mostra "Informe um cupom.", mensagem que não está na documentação |
 | OBS-02 | Observação | As validações do checkout só aparecem ao confirmar o pedido |
 | OBS-03 | Observação | O cupom inválido não chega ao checkout; o erro 422 de `/api/pedidos` só dá para testar pela API |
@@ -192,11 +205,13 @@ Nada aqui é bug, nem faz parte do card VZS-142. São ideias que surgiram enquan
 | MEL-02 | Checkout, endereço | Mostrar rua, bairro e cidade a partir do CEP digitado | Hoje o checkout pede só o CEP, sem endereço. Mostrar o endereço encontrado ajuda o cliente a perceber um CEP digitado errado antes de confirmar. |
 | MEL-03 | Checkout, validações | Validar cada campo ao sair dele, e não só em "Confirmar pedido" (ver OBS-02) | O cliente descobre o erro na hora, campo a campo, em vez de receber três mensagens de uma vez no fim. Hoje, além disso, a mensagem continua na tela mesmo depois de o campo ser corrigido e só some no próximo clique em "Confirmar pedido" (conferido em 07/10, OBS-02). |
 | MEL-04 | Vitrine | `aria-label` próprio no botão de cada produto, como "Adicionar Calça Jeans Slim ao carrinho" (ver OBS-04) | Leitores de tela hoje ouvem oito botões iguais. Também deixaria a automação mais simples e estável. |
-| MEL-05 | Cabeçalho no celular | Menu recolhível (ícone ☰) com Produtos e Documentação (ver BUG-02) | Mantém o acesso às páginas sem ocupar espaço em telas pequenas. |
+| MEL-05 | Cabeçalho em larguras pequenas | Menu recolhível (ícone ☰) com Produtos e Documentação (ver BUG-02) | Mantém o acesso às páginas sem ocupar espaço no celular ou com a janela do navegador estreitada. |
 | MEL-06 | Carrinho, frete | Mensagem positiva ao atingir o frete grátis, como "Você ganhou frete grátis!" | Hoje o aviso "Faltam R$ X" só desaparece. O cliente pode nem perceber que ganhou o benefício. |
 | MEL-07 | Carrinho, resumo | Linha "Você economizou R$ X" somando o desconto do cupom e o frete grátis | Junta os dois benefícios da entrega num número só, que é o objetivo da história: pagar menos. |
 | MEL-08 | Carrinho, cupom | Mostrar a mensagem que a API já devolve ("Cupom aplicado: 10% de desconto nos produtos.") em vez de só "Cupom BEMVINDO10 aplicado." | Deixa claro que o desconto vale só para os produtos (CA09) e evita a dúvida "por que o frete continua sendo cobrado?". Ver DOC-02. |
 | MEL-09 | Carrinho, "Esvaziar carrinho" | Pedir confirmação antes de esvaziar o carrinho | Hoje o botão apaga todos os itens direto, sem confirmação (conferido em 07/10). Um clique acidental faz o cliente perder tudo o que montou. |
+| MEL-10 | Vitrine | Seletor de quantidade no card do produto | Hoje cada clique em "Adicionar ao carrinho" soma só 1 unidade: para levar 5, o cliente clica 5 vezes ou ajusta depois no carrinho. |
+| MEL-11 | Checkout, campo CEP | Máscara no CEP: só números, no máximo 9 caracteres, no formato 00000-000 | Hoje o campo aceita letras e não tem limite (9-03), apesar da dica "Somente números ou no formato 00000-000.". O erro só aparece ao confirmar o pedido. |
 
 ### Conferências finais
 Conferido à mão em 07/10/2026, no Google Chrome 154:
@@ -289,7 +304,8 @@ Cada item termina com a interpretação que adotei e o cenário que a testa, ou 
 - **Interpretação:**
   - nome válido tem pelo menos duas palavras com letras, aceitando acento e hífen;
   - e-mail segue o formato comum `texto@dominio.ext`.
-- **Teste:** nenhum. Fica como observação, fora dos cenários críticos: a regra não está definida, então um comportamento diferente não seria bug. O CT-61 cobre só os casos claramente inválidos (sem sobrenome, e-mail sem @).
+- **Teste:** nenhum cenário automatizado. Fica como observação, fora dos cenários críticos: a regra não está definida, então um comportamento diferente nos casos duvidosos não seria bug. O CT-61 cobre só os casos claramente inválidos (sem sobrenome, e-mail sem @).
+- **Exploração complementar (07/10/2026, 9-01):** um nome só com símbolos (`@@ @@`) foi aceito e o pedido foi confirmado. Esse caso não é duvidoso: "nome e sobrenome" pressupõe letras, como diz a interpretação acima. Uma chamada manual mostrou que a API também aceita (201). Registrei como BUG-04, e o CT-64 passou a cobrir o caso na API.
 
 #### DOC-09 — Mensagens de erro do checkout não documentadas
 - **Na tela:** "Informe nome e sobrenome.", "Informe o nome completo.", "Informe um e-mail válido." e "Informe um CEP com 8 dígitos."
@@ -371,7 +387,7 @@ Estes três itens apareceram depois da exploração, ao escrever e automatizar o
 | DOC-05 | Inconsistência | Exemplos com `...` | `itens[].total` = preço × quantidade (CT-83); a comparação com `/pedidos` ficou como observação |
 | DOC-06 | Lacuna | Cupom vazio ou só espaços | conta como "sem cupom" na API (não testado, observação) |
 | DOC-07 | Lacuna | CA02 na API | vale para a tela e para a API |
-| DOC-08 | Lacuna | Regras de nome e e-mail | duas palavras com letras; formato comum de e-mail (casos duvidosos não testados, observação) |
+| DOC-08 | Lacuna | Regras de nome e e-mail | duas palavras com letras; formato comum de e-mail (casos duvidosos não testados, observação; nome só com símbolos é aceito: BUG-04) |
 | DOC-09 | Lacuna | Mensagens do checkout | textos observados como referência |
 | DOC-10 | Lacuna | Sem `Content-Type` | não testado (observação) |
 | DOC-11 | Lacuna | Métodos por rota | deduzidos dos exemplos; testar o 405 |

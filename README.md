@@ -15,7 +15,11 @@ Este repositório é a minha entrega do teste técnico de QA Júnior da Verzel. 
 
 > **BUG-03 (Alta): a API aceita mais de 5 unidades por produto.** O CA10 diz que o limite vale "para a interface e para a API". A tela trava em 5, mas a API calcula o carrinho com 6 unidades e confirma o pedido.
 
-Também registrei o **BUG-02** (Baixa): o menu some em telas de celular. Ele fica fora do escopo do card. Todos os bugs, com passos, esperado × obtido e evidências, estão em [docs/04-bugs.md](docs/04-bugs.md).
+Também registrei dois bugs de severidade baixa:
+- **BUG-02:** o layout quebra em larguras pequenas. O menu some no celular e também com a janela do navegador estreitada. Fica fora do escopo do card.
+- **BUG-04:** o checkout aceita um nome só com símbolos (`@@ @@`) como nome e sobrenome e confirma o pedido. A API também aceita (201).
+
+Todos os bugs, com passos, esperado × obtido e evidências, estão em [docs/04-bugs.md](docs/04-bugs.md).
 
 ## Como rodar
 

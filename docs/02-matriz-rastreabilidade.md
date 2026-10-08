@@ -24,7 +24,7 @@ Legenda: ✅ passou · ❌ falhou por bug · "3 nav." = Chromium, Firefox e WebK
 
 | Regra | UI | API | Resultado | Bug |
 |---|---|---|---|---|
-| Nome com nome e sobrenome | CT-61 · nome | CT-63 (`DADOS_INVALIDOS`, confere `erro.campos.0.campo = cliente.nome`) | ✅ UI (3 nav.) e API | — |
+| Nome com nome e sobrenome | CT-61 · nome | CT-63 (`DADOS_INVALIDOS`, confere `erro.campos.0.campo = cliente.nome`), CT-64 (nome só com símbolos, `@bug-04`, ainda não executado) | ✅ UI (3 nav.) e API (CT-63) · ❌ exploração 9-01 e chamada manual: nome só com símbolos aceito na tela e na API | BUG-04 |
 | E-mail válido | CT-61 · email | — (lacuna: o CT-63 envia e-mail inválido, mas só confere o primeiro item de `erro.campos`, o do nome) | ✅ UI (3 nav.) | — |
 | CEP com 8 dígitos, com ou sem hífen | CT-61 · cep 7 dígitos, CT-61 · cep 9 dígitos | CT-62 · 01310-100, CT-62 · 01310100 (só CEP válido, normalizado, DOC-03; CEP inválido na API é lacuna) | ✅ UI (3 nav.) e API | — |
 | Pagamento na entrega | CT-60 (texto "o pagamento será feito na entrega" na confirmação) | — | ✅ UI (3 nav.) | — |
@@ -50,5 +50,6 @@ Legenda: ✅ passou · ❌ falhou por bug · "3 nav." = Chromium, Firefox e WebK
   - **Falharam por bug:** 8, todas com `@bug-XX`. Nenhuma falha sem bug registrado.
     - BUG-01 (frete cobrado com subtotal de exatamente R$ 200,00): CT-20 nos 3 navegadores, CT-23, CT-25 e CT-27.
     - BUG-03 (API aceita mais de 5 unidades): CT-52 · 6 e CT-53.
+- **Bugs encontrados só na exploração manual, sem cenário automatizado:** BUG-02 (layout em larguras pequenas, fora do card) e BUG-04 (nome só com símbolos aceito na tela e na API; na API, o CT-64 foi criado e ainda não foi executado).
 - **Lacunas declaradas:** a validação de e-mail e de CEP inválidos não é conferida na API (o CT-63 só confere o nome). As duas regras estão cobertas na UI (CT-61), e o formato da resposta foi registrado na DOC-01.
 - **Só numa camada, por decisão** ([Critério de priorização](01-plano-de-teste.md#critério-de-priorização)): CA02, CA08, CA09 e CA11 só na API, por serem regras de valor; CA05 só na UI, por ser comportamento da tela.

@@ -76,3 +76,16 @@ Feature: Checkout e confirmação do pedido
     Then the response status should be 422
     And the response field "erro.codigo" should be "DADOS_INVALIDOS"
     And the response field "erro.campos.0.campo" should be "cliente.nome"
+
+  # BUG-04: a regra "nome e sobrenome" pressupõe letras (DOC-08). Na exploração complementar (9-01) e numa
+  # chamada manual, a API aceitou "@@ @@" com 201 (docs/05-evidencias/exploracao/BUG-04_pedidos-nome-simbolos.json).
+  @CT-64 @regra-loja @api @automatizado @bug-04
+  Scenario: API recusa pedido com nome só com símbolos
+    Given the cart items:
+      | produto | quantidade |
+      | P005    | 1          |
+    And the customer with name "@@ @@", email "maria@exemplo.com" and zip code "01310-100"
+    When I create the order via API
+    Then the response status should be 422
+    And the response field "erro.codigo" should be "DADOS_INVALIDOS"
+    And the response field "erro.campos.0.campo" should be "cliente.nome"

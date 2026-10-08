@@ -17,7 +17,7 @@ Verificar se a entrega do card VZS-142 (v2.3.0), que trata de cupom de desconto 
 **Fora**
 - O que a própria documentação exclui: login, cadastro, pagamento online e consulta de pedidos.
 - Testes de carga, estresse e segurança, porque o ambiente é compartilhado com outros candidatos.
-- Layout no celular. Registrei o BUG-02 durante a exploração, mas ele não faz parte do card.
+- Layout em larguras pequenas (celular ou janela estreita). Registrei o BUG-02 durante a exploração, mas ele não faz parte do card.
 - O limite de data de validade do cupom (DOC-13).
 
 ## Critério de priorização
@@ -25,6 +25,8 @@ Verificar se a entrega do card VZS-142 (v2.3.0), que trata de cupom de desconto 
 Mantenho só os cenários críticos. Para cada um, pergunto: **se este cenário falhar, a entrega tem um problema real?** Se a resposta é não, o comportamento fica registrado como observação em [00-exploracao.md](00-exploracao.md), sem cenário automatizado. Foi o que aconteceu com o cupom vazio (OBS-01, DOC-06) e com o cupom recusado no checkout (OBS-03).
 
 Também não repito o mesmo teste nas duas camadas: a **API** cobre as regras e os valores, e a **UI** cobre só o que o cliente vê e faz na tela.
+
+O mesmo critério vale para bugs futuros: um bug de severidade alta com impacto direto no cliente, como o BUG-01, que cobra frete indevido, seria tratado como **hotfix**, corrigido e testado de novo antes da próxima entrega, sem esperar o ciclo normal.
 
 ## Estratégia
 

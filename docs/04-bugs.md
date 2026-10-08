@@ -3,8 +3,9 @@
 | ID | Título | Severidade | Regra | Status |
 |---|---|---|---|---|
 | BUG-01 | API cobra frete com subtotal de exatamente R$ 200,00 | Alta | CA06 (afeta também o CA08) | Aberto |
-| BUG-02 | Menu de navegação some em telas de celular | Baixa | — (fora do card) | Aberto |
+| BUG-02 | Layout quebra em larguras pequenas: o menu some no celular e com a janela do navegador estreitada | Baixa | — (fora do card) | Aberto |
 | BUG-03 | API aceita mais de 5 unidades por produto (CA10) | Alta | CA10 | Aberto |
+| BUG-04 | Tela e API aceitam nome só com símbolos como nome e sobrenome | Baixa | Regra da loja "nome e sobrenome" (DOC-08) | Aberto |
 
 ---
 
@@ -57,24 +58,26 @@
 
 ---
 
-### BUG-02 — Menu de navegação some em telas de celular
+### BUG-02 — Layout quebra em larguras pequenas
 - **Severidade:** Baixa. Fora do escopo do card VZS-142; registrado como achado da exploração.
 - **Camada:** UI (responsividade)
-- **Ambiente:** DevTools, emulação Pixel 9 e dobráveis · Google Chrome 154.0.8037.98
+- **Ambiente:** Google Chrome 154.0.8037.98 · DevTools, emulação Pixel 9 e dobráveis (06/10/2026) · janela do navegador estreitada, com o DevTools aberto ao lado (07/10/2026)
 
 **Passos para reproduzir**
-1. Abrir a loja e ativar o modo dispositivo do DevTools (Pixel 9).
-2. Observar o cabeçalho.
+1. Abrir a loja e ativar o modo dispositivo do DevTools (Pixel 9). Observar o cabeçalho.
+2. Ou, sem o modo dispositivo: abrir o DevTools ao lado da página (ou estreitar a janela do navegador) até a área da loja ficar estreita. Observar o cabeçalho.
 
 **Resultado esperado**
 - Acesso a Produtos, Documentação e Carrinho, seja visível ou num menu recolhido.
 
 **Resultado obtido**
 - Só ficam visíveis a marca (link para a página inicial) e o Carrinho. Os links "Produtos" e "Documentação" continuam no HTML, mas não aparecem, e não há menu alternativo. Em largura de iPad Mini o cabeçalho volta ao normal.
+- O problema não é só de celular: depende da largura da área visível. Com a janela do navegador estreitada (por exemplo, com o DevTools aberto ao lado), o cabeçalho quebra do mesmo jeito.
 
 **Evidências**
 - `docs/05-evidencias/exploracao/EXP-8-01_cabecalho-pixel9.png`
 - `docs/05-evidencias/exploracao/EXP-8-02_cabecalho-ipad-mini.png`
+- `docs/05-evidencias/exploracao/EXP-9-02_layout-largura-pequena.png` (janela do navegador estreitada)
 
 ---
 
@@ -108,6 +111,33 @@
 - `docs/05-evidencias/automacao/CT-52-ex2_api.json` (`/carrinho/calcular`, execução automatizada)
 - `docs/05-evidencias/automacao/CT-53_api.json` (`/api/pedidos`, execução automatizada: 201 em vez de 422; o número do pedido muda a cada execução)
 - `docs/05-evidencias/exploracao/BUG-03_pedidos-quantidade-6.json` (`/api/pedidos`, chamada manual que confirmou o bug no pedido; o bug foi encontrado pela automação, no CT-52 · 6)
+
+---
+
+### BUG-04 — Tela e API aceitam nome só com símbolos como nome e sobrenome
+- **Severidade:** Baixa. Não afeta valores nem o cupom e o frete do card, mas deixa a loja confirmar um pedido com um nome que não identifica o cliente.
+- **Regra:** regra da loja anterior ao card: "O nome do cliente precisa ter nome e sobrenome.". Interpretação: "nome e sobrenome" pressupõe letras (DOC-08: nome válido tem pelo menos duas palavras com letras, aceitando acento e hífen).
+- **Camada:** UI (checkout) e API (`POST /api/pedidos`). A tela só repassa o nome: a validação que falta é a da API.
+- **Cenários:** encontrado na exploração complementar (item 9-01 do `00-exploracao.md`) e confirmado na API por uma chamada manual. Na API, coberto pelo CT-64 (`features/checkout.feature`, `@bug-04`), ainda não executado.
+- **Ambiente:** https://verzel-store.qa-test-verzel-store.workers.dev · Google Chrome 154.0.8037.98 · 07/10/2026
+
+**Passos para reproduzir**
+1. Na vitrine, adicionar 1 Mochila Urbana 20L, abrir o carrinho e clicar em "Finalizar compra".
+2. Preencher o nome com `@@ @@`, o e-mail com `maria@exemplo.com` e o CEP com `01310-100`.
+3. Clicar em "Confirmar pedido".
+4. Na API: enviar `POST /api/pedidos` com `{"itens":[{"produtoId":"P005","quantidade":1}],"cliente":{"nome":"@@ @@","email":"maria@exemplo.com","cep":"01310-100"}}`.
+
+**Resultado esperado**
+- Tela: mensagem "Informe nome e sobrenome." no campo nome, e o pedido não é confirmado (como acontece com `Maria`, caso 5-01 da exploração).
+- API: **422** com `"codigo": "DADOS_INVALIDOS"` e o nome em `erro.campos` (como no CT-63).
+
+**Resultado obtido**
+- Tela: a loja aceita cada grupo de símbolos como nome e sobrenome, e o pedido é confirmado.
+- API: **201**, pedido **VZ-531910** criado com `"nome": "@@ @@"` (subtotal 100, frete 19,9, total 119,9).
+
+**Evidências**
+- `docs/05-evidencias/exploracao/EXP-9-01_nome-simbolos.png` (tela)
+- `docs/05-evidencias/exploracao/BUG-04_pedidos-nome-simbolos.json` (API, chamada manual de 07/10/2026)
 
 ---
 
