@@ -1,13 +1,15 @@
-const { Before } = require('@cucumber/cucumber')
-const CatalogPage = require('../pages/CatalogPage')
-const CartPage = require('../pages/CartPage')
-const CheckoutPage = require('../pages/CheckoutPage')
-const ConfirmationPage = require('../pages/ConfirmationPage')
-const Header = require('../pages/components/Header')
-const Summary = require('../pages/components/Summary')
+const { Before } = require('@cucumber/cucumber');
+const { expect } = require('@playwright/test');
+const S = require('../pages/selectors');
+const CatalogPage = require('../pages/CatalogPage');
+const CartPage = require('../pages/CartPage');
+const CheckoutPage = require('../pages/CheckoutPage');
+const ConfirmationPage = require('../pages/ConfirmationPage');
+const Header = require('../pages/components/Header');
+const Summary = require('../pages/components/Summary');
 
-// Roda depois do Before do world.js (carregado primeiro), que já abriu o navegador.
-Before({ tags: '@ui' }, async function(){
+// todo cenário de UI começa na vitrine, com a grade dos 8 produtos carregada
+Before({ tags: '@ui' }, async function () {
     this.pages = {
         catalog: new CatalogPage(this.page),
         cart: new CartPage(this.page),
@@ -15,5 +17,8 @@ Before({ tags: '@ui' }, async function(){
         confirmation: new ConfirmationPage(this.page),
         header: new Header(this.page),
         summary: new Summary(this.page)
-    }
-})
+    };
+    await this.pages.catalog.open();
+    await expect(this.pages.catalog.grid).toBeVisible();
+    await expect(this.pages.catalog.gridItems).toHaveCount(S.textos.quantidadeDeProdutosNaVitrine);
+});

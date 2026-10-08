@@ -12,10 +12,14 @@
     "test:firefox": "node scripts/run-browsers.js firefox",
     "test:webkit": "node scripts/run-browsers.js webkit",
     "test:all": "node scripts/run-browsers.js chromium firefox webkit",
+    "test:visual": "node scripts/run-browsers.js chromium firefox webkit -- --tags @visual",
+    "test:visual:update": "node scripts/update-visual.js",
     "postinstall": "playwright install chromium firefox webkit"
   },
   "devDependencies": {
     "@cucumber/cucumber": "^13.3.0",
-    "@playwright/test": "^1.63.0"
+    "@playwright/test": "^1.63.0",
+    "pixelmatch": "^8.0.0",
+    "pngjs": "^7.0.0"
   }
 }

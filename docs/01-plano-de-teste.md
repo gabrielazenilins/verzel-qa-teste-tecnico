@@ -1,12 +1,14 @@
-# Plano de Teste — Verzel Store (VZS-142)
+# Plano de teste: Verzel Store (VZS-142)
 
 ## Objetivo
 
-Verificar se a entrega do card VZS-142 (v2.3.0), que trata de cupom de desconto e frete grátis, atende aos critérios CA01 a CA11 na interface e na API. Também testo o checkout, porque é nele que o total calculado vira pedido. As regras estão na [documentação](referencias/documentacao-v2.3.0.md) e não repito aqui. Quando a documentação deixa dúvida, sigo a interpretação registrada em [Análise da documentação](00-exploracao.md#análise-da-documentação) (DOC-01 a DOC-17).
+Quero saber se a entrega do card VZS-142 (v2.3.0), de cupom de desconto e frete grátis, atende aos critérios CA01 a CA11 na tela e na API. Também testo o checkout, porque é ali que o total calculado vira pedido.
+
+As regras estão na [documentação](referencias/documentacao-v2.3.0.md) e não repito aqui. Quando a documentação deixa dúvida, sigo a interpretação que registrei em [Análise da documentação](00-exploracao.md#análise-da-documentação) (DOC-01 a DOC-17).
 
 ## Escopo
 
-**Dentro**
+Dentro:
 - Cupom no carrinho: aplicar, recusar, remover e trocar (CA01 a CA05).
 - Frete fixo, frete grátis e o aviso de quanto falta (CA06 a CA09).
 - Fórmula do total e arredondamento (CA11).
@@ -14,71 +16,71 @@ Verificar se a entrega do card VZS-142 (v2.3.0), que trata de cupom de desconto 
 - Checkout: validação de nome, e-mail e CEP, e a confirmação do pedido.
 - API: `GET /api/produtos`, `GET /api/produtos/{id}`, `POST /api/carrinho/calcular`, `POST /api/pedidos` e a tabela de códigos de erro.
 
-**Fora**
+Fora:
 - O que a própria documentação exclui: login, cadastro, pagamento online e consulta de pedidos.
 - Testes de carga, estresse e segurança, porque o ambiente é compartilhado com outros candidatos.
-- Layout em larguras pequenas (celular ou janela estreita). Registrei o BUG-02 durante a exploração, mas ele não faz parte do card.
+- Layout em larguras pequenas (celular ou janela estreita). Registrei o BUG-02 na exploração, mas ele não faz parte do card.
 - O limite de data de validade do cupom (DOC-13).
 
 ## Critério de priorização
 
-Mantenho só os cenários críticos. Para cada um, pergunto: **se este cenário falhar, a entrega tem um problema real?** Se a resposta é não, o comportamento fica registrado como observação em [00-exploracao.md](00-exploracao.md), sem cenário automatizado. Foi o que aconteceu com o cupom vazio (OBS-01, DOC-06) e com o cupom recusado no checkout (OBS-03).
+Fico só com os cenários críticos. Para cada um eu pergunto: se este cenário falhar, a entrega tem um problema real? Se a resposta é não, o comportamento fica como observação no [00-exploracao.md](00-exploracao.md), sem cenário automatizado. Foi o caso do cupom vazio (OBS-01, DOC-06) e do cupom recusado no checkout (OBS-03).
 
-Também não repito o mesmo teste nas duas camadas: a **API** cobre as regras e os valores, e a **UI** cobre só o que o cliente vê e faz na tela.
+Também não repito o mesmo teste nas duas camadas. A API cobre as regras e os valores. A UI cobre só o que o cliente vê e faz na tela.
 
-O mesmo critério vale para bugs futuros: um bug de severidade alta com impacto direto no cliente, como o BUG-01, que cobra frete indevido, seria tratado como **hotfix**, corrigido e testado de novo antes da próxima entrega, sem esperar o ciclo normal.
+O mesmo critério vale para bugs futuros. Um bug de severidade alta com impacto direto no cliente, como o BUG-01, que cobra frete indevido, eu trataria como hotfix: corrigido e testado de novo antes da próxima entrega, sem esperar o ciclo normal.
 
 ## Estratégia
 
 A documentação diz que "os cálculos são feitos pela API e a interface apenas exibe o resultado". Por isso divido assim:
 
-- **API, onde ficam as regras de valor.** É aqui que testo com mais profundidade os valores-limite do frete, o desconto, a fórmula e o arredondamento. Comparo números exatos, o que também pega erro de ponto flutuante (DOC-12). Também ficam só na API os casos que a tela não deixa reproduzir: quantidades 0, negativas ou acima de 5 (a tela só tem botões + e −), o 422 de cupom em `/pedidos` (DOC-14), a normalização do CEP (DOC-03) e todos os códigos de erro.
-- **UI, onde fica o comportamento da tela.** Aqui cubro o que só existe na tela: a mensagem do cupom, o cupom aplicado com o botão "Remover cupom" (CA05), o aviso "Faltam R$ X para o frete grátis.", o botão + travando em 5 (o − travando em 1 ficou coberto pela exploração, seção 2), as mensagens do checkout e a confirmação. Para os valores, verifico se a tela mostra o que a API calculou em alguns casos representativos, sem repetir todas as combinações.
-- **Nas duas camadas:** CA01, CA03/CA04, CA06 (incluindo o limite de R$ 200,00), CA07 e CA10. São as regras centrais do card, e um defeito em qualquer uma das camadas chega ao cliente.
-- **Numa camada só:** o CA02, o CA08, o CA09 e o CA11 ficam só na API, porque são regras de valor; o CA05 fica só na UI, porque é o comportamento do campo de cupom.
+- API, onde ficam as regras de valor. É aqui que testo mais a fundo os valores-limite do frete, o desconto, a fórmula e o arredondamento. Comparo números exatos, o que também pega erro de ponto flutuante (DOC-12). Também ficam só na API os casos que a tela não deixa fazer: quantidade 0, negativa ou acima de 5 (a tela só tem os botões + e −), o 422 de cupom em `/pedidos` (DOC-14), a normalização do CEP (DOC-03) e todos os códigos de erro.
+- UI, onde fica o comportamento da tela. Aqui cubro o que só existe na tela: a mensagem do cupom, o cupom aplicado com o botão "Remover cupom" (CA05), o aviso "Faltam R$ X para o frete grátis.", o botão + travando em 5 (o − travando em 1 ficou coberto pela exploração, seção 2), as mensagens do checkout e a confirmação. Nos valores, confiro se a tela mostra o que a API calculou em alguns casos, sem repetir todas as combinações.
+- Nas duas camadas: CA01, CA03/CA04, CA06 (com o limite de R$ 200,00), CA07 e CA10. São as regras centrais do card, e um defeito em qualquer camada chega ao cliente.
+- Numa camada só: CA02, CA08, CA09 e CA11 ficam só na API, porque são regras de valor. O CA05 fica só na UI, porque é o comportamento do campo de cupom.
 
-Automatizo com Playwright + Cucumber. Todos os cenários foram automatizados; nenhum ficou `@manual`. A execução manual no Google Chrome 154 está em [03-execucao.md](03-execucao.md). Quando um cenário falha porque o sistema contraria a documentação, não ajusto o esperado: abro o bug e marco o cenário com `@bug-XX`.
+Automatizei com Playwright + Cucumber. Todos os cenários foram automatizados e nenhum ficou `@manual`. A execução manual no Google Chrome 154 está no [03-execucao.md](03-execucao.md). Quando um cenário falha porque a loja contraria a documentação, não mudo o esperado: abro o bug e marco o cenário com `@bug-XX`.
 
-**Navegadores.** Rodo os cenários de UI em Chromium, Firefox e WebKit, os três motores que cobrem Chrome/Edge, Firefox e Safari. A regra de cálculo está na API, então o resultado esperado é o mesmo nos três. O que muda entre eles é a renderização e o comportamento da tela, como os botões desabilitados no limite de 5 e as mensagens de validação. Se um cenário falha em um só navegador, registro o bug indicando em qual. Os cenários de API não dependem de navegador.
+Navegadores: rodo os cenários de UI em Chromium, Firefox e WebKit, os três motores por trás do Chrome/Edge, do Firefox e do Safari. A regra de cálculo está na API, então o esperado é o mesmo nos três. O que muda entre eles é a renderização e o comportamento da tela, como os botões desabilitados no limite de 5 e as mensagens de validação. Se um cenário falhar em um navegador só, registro o bug dizendo qual. Os cenários de API não dependem de navegador.
 
-**Status de execução**
-- **Passou:** o resultado foi igual ao esperado.
-- **Falhou:** o sistema respondeu diferente do esperado. Vira bug em [04-bugs.md](04-bugs.md).
-- **Bloqueado:** não foi possível executar, por exemplo com a loja fora do ar.
+Status de execução:
+- Passou: o resultado foi igual ao esperado.
+- Falhou: a loja respondeu diferente do esperado. Vira bug no [04-bugs.md](04-bugs.md).
+- Bloqueado: não deu para executar, por exemplo com a loja fora do ar.
 
 ## Mapa de cenários
 
-Ver [02-matriz-rastreabilidade.md](02-matriz-rastreabilidade.md): cada regra (CA01 a CA11, regras da loja e contrato da API) × cenários de UI e de API, com o resultado e o bug.
+Está no [02-matriz-rastreabilidade.md](02-matriz-rastreabilidade.md): cada regra (CA01 a CA11, regras da loja e contrato da API) × cenários de UI e de API, com o resultado e o bug.
 
 ## Dados de teste e valores-limite
 
-Os produtos, preços e cupons são fixos (tabela em [CLAUDE.md](../CLAUDE.md#dados-de-teste)). Escolhi as combinações que ficam em volta dos limites:
+Os produtos, preços e cupons são fixos (tabela no [CLAUDE.md](../CLAUDE.md#dados-de-teste)). Escolhi combinações em volta dos limites:
 
 | Caso | Carrinho | Subtotal | O que verifica |
 |---|---|---|---|
-| Logo abaixo | P001 + P002 | 199,80 | frete 19,90, faltam 0,20 |
-| No limite − 0,10 | P005 + P008 + P004 | 199,90 | frete 19,90, faltam 0,10 |
-| **No limite** | P005 ×2 | 200,00 | frete grátis (hoje falha: BUG-01) |
+| Limite − 0,20 | P001 + P002 | 199,80 | frete 19,90, faltam 0,20 |
+| Limite − 0,10 | P005 + P008 + P004 (UI, CT-21) ou P004 + P008 ×3 (API, CT-24) | 199,90 | frete 19,90, faltam 0,10 |
+| No limite | P005 ×2 | 200,00 | frete grátis (hoje falha: BUG-01) |
 | Acima | P003 + P006 | 219,80 | frete grátis, faltante zero |
 | Exemplo da documentação | P002 + P004 ×2 | 239,70 | desconto 23,97, total 215,73 |
 | CA08 com cupom | P003 + P006 + BEMVINDO10 | 219,80 | desconto 21,98, total 197,82 (abaixo de 200), frete continua grátis |
 | CA09 | P001 + P004 + BEMVINDO10 | 109,80 | desconto 10,98 só nos produtos, total 118,72 |
 
-- **Cupons:** `BEMVINDO10` em maiúsculas, em minúsculas e misturado com espaços no início e no fim; `VERAO2026` (expirado); `XYZ123` (inexistente). O cupom vazio e o só com espaços ficaram como observação (OBS-01, DOC-06).
-- **Quantidade:** na API, 5 (aceito), 6 (acima do limite, também em `/api/pedidos`) e 0, −1, 1.5 e `"2"` como texto (inválidos), no CT-52 e no CT-53. Na tela, o limite de 5 no carrinho e na vitrine (CT-50 e CT-51).
-- **Cliente:** Maria Silva / maria@exemplo.com / 01310-100. Os casos de CEP, nome e e-mail inválidos vêm da exploração (seção 5); os casos duvidosos da DOC-08 ficaram como observação.
+- Cupons: `BEMVINDO10` em maiúsculas, em minúsculas e misturado com espaços no início e no fim; `VERAO2026` (expirado); `XYZ123` (não existe). O cupom vazio e o só com espaços ficaram como observação (OBS-01, DOC-06).
+- Quantidade: na API, 5 (aceito), 6 (acima do limite, também em `/api/pedidos`) e 0, −1, 1.5 e `"2"` como texto (inválidos), no CT-52 e no CT-53. Na tela, o limite de 5 no carrinho e na vitrine (CT-50 e CT-51).
+- Cliente: Maria Silva / maria@exemplo.com / 01310-100. Os casos de CEP, nome e e-mail inválidos vêm da exploração (seção 5). Os casos duvidosos da DOC-08 ficaram como observação.
 
 ## Ambiente e como rodar
 
-- Loja: https://verzel-store.qa-test-verzel-store.workers.dev (pode ser trocada pela variável `BASE_URL`).
+- Loja: https://verzel-store.qa-test-verzel-store.workers.dev (dá para trocar pela variável `BASE_URL`).
 - Windows 11, Node 24, Playwright 1.63 e Cucumber 13.
-- Automação: Chromium 153, Firefox 155 e WebKit 26.6, nas versões que vêm com o Playwright. O navegador é escolhido pela variável `BROWSER` (`chromium` é o padrão).
+- Automação: Chromium 153, Firefox 155 e WebKit 26.6, nas versões que vêm com o Playwright. O navegador é escolhido pela variável `BROWSER` (o padrão é `chromium`).
 - Exploração manual: Google Chrome 154.0.8037.98.
 
 ```
 npm install                          # instala as dependências e os três navegadores
 npm test                             # tudo, menos @manual, no Chromium
-npm run test:firefox                 # só os @ui no Firefox (test:webkit idem; test:chromium roda tudo)
+npm run test:firefox                 # só os @ui no Firefox (test:webkit igual; test:chromium roda tudo)
 npm run test:all                     # Chromium com tudo; Firefox e WebKit só com @ui (a API roda uma vez)
 npm run test:api                     # só API
 npm run test:ui                      # só UI
@@ -86,32 +88,30 @@ npx cucumber-js --tags "@CT-24"      # um cenário
 $env:HEADLESS="false"; npm test      # PowerShell, com o navegador visível
 ```
 
-Cada navegador gera o seu relatório em `reports/cucumber-report-<navegador>.html`, e cada cenário de UI registra o navegador e a versão usados. Quando um cenário de UI falha ou tem `@bug-XX`, o print é anexado ao relatório e salvo em `docs/05-evidencias/automacao/CT-XX_<navegador>_<passou|falhou>.png`. Em `Scenario Outline`, o nome ganha o sufixo `-ex<N>`, com a posição do exemplo (ex.: `CT-02-ex2_chromium_falhou.png`), para cada exemplo ter o seu print. Nos cenários de API com `@bug-XX` que falham, a requisição e a resposta são salvas em `docs/05-evidencias/automacao/CT-XX_api.json`. Os relatórios HTML da execução final estão versionados em `docs/05-evidencias/automacao/relatorios/`.
+Cada navegador gera o seu relatório em `reports/cucumber-report-<navegador>.html`, e cada cenário de UI registra o navegador e a versão. Quando um cenário de UI falha ou tem `@bug-XX`, o print vai para o relatório e para `docs/05-evidencias/automacao/CT-XX_<navegador>_<passou|falhou>.png`. Em `Scenario Outline`, o nome ganha o sufixo `-ex<N>` com a posição do exemplo (ex.: `CT-02-ex2_chromium_falhou.png`), para cada exemplo ter o seu print. Nos cenários de API com `@bug-XX` que falham, a requisição e a resposta vão para `docs/05-evidencias/automacao/CT-XX_api.json`. Os relatórios HTML da execução final estão em `docs/05-evidencias/automacao/relatorios/`.
 
 ## Riscos e limitações
 
-- **Ambiente compartilhado.** Muitos candidatos usam a mesma loja ao mesmo tempo. Não faço teste de carga, e cada cenário começa com o carrinho vazio, sem depender de outro. Se a loja ficar lenta ou fora do ar, o resultado é "Bloqueado", não "Falhou".
-- **Sem `data-testid`.** Uso `aria-label`, `id` e `data-valor` (OBS-04). O botão "Adicionar ao carrinho" é igual em todos os cards, então localizo o card pelo título antes de clicar. Se a estrutura do card mudar, esses seletores quebram. Os `aria-label` usam o nome do produto, por isso deixei a conversão id → nome num único arquivo.
-- **422 de cupom em `/pedidos` não é alcançável pela UI** (DOC-14). A tela não leva um cupom recusado para o checkout, então essa regra só é testada pela API.
-- **Validade do cupom (DOC-13).** Os cupons são fixos, então só testo um cupom já expirado. A virada de data (último dia válido × primeiro dia expirado) e o fuso horário ficam sem cobertura.
-- **Arredondamento (DOC-12).** Nenhuma combinação de produtos gera uma terceira casa decimal. Cubro o CA11 verificando que nenhum valor da resposta passa de 2 casas.
-- **Textos não documentados (DOC-09).** As mensagens do checkout foram tiradas da tela. Se mudarem, o teste quebra sem que seja necessariamente um bug.
+- Ambiente compartilhado. Muitos candidatos usam a mesma loja ao mesmo tempo. Não faço teste de carga, e cada cenário começa com o carrinho vazio, sem depender de outro. Se a loja ficar lenta ou fora do ar, o resultado é "Bloqueado", não "Falhou".
+- Sem `data-testid`. Uso `aria-label`, `id` e `data-valor` (OBS-04). O botão "Adicionar ao carrinho" é igual em todos os cards, então acho o card pelo título antes de clicar. Se a estrutura do card mudar, esses seletores quebram. Os `aria-label` usam o nome do produto, por isso deixei a conversão id → nome num arquivo só.
+- O 422 de cupom em `/pedidos` não dá para alcançar pela UI (DOC-14). A tela não leva um cupom recusado para o checkout, então essa regra só é testada pela API.
+- Validade do cupom (DOC-13). Os cupons são fixos, então só testo um cupom já expirado. A virada de data (último dia válido × primeiro dia expirado) e o fuso horário ficam sem cobertura.
+- Arredondamento (DOC-12). Nenhuma combinação de produtos gera uma terceira casa decimal. Cubro o CA11 conferindo que nenhum valor da resposta passa de 2 casas.
+- Textos não documentados (DOC-09). As mensagens do checkout foram tiradas da tela. Se mudarem, o teste quebra sem que seja necessariamente um bug.
 
 ## Critérios de saída
 
 - Cada critério de CA01 a CA11 tem pelo menos um cenário, automatizado ou manual com justificativa, rastreado na matriz.
-- Todos os cenários automatizados foram executados e estão registrados em [03-execucao.md](03-execucao.md).
-- Nenhum cenário falha sem explicação: ou corrijo o teste, ou a falha tem `@bug-XX` e o bug está em [04-bugs.md](04-bugs.md) com passos, esperado × obtido e evidência.
-- Nenhum cenário instável (que passa e falha sem mudança no sistema).
+- Todos os cenários automatizados foram executados e estão no [03-execucao.md](03-execucao.md).
+- Nenhum cenário falha sem explicação: ou corrijo o teste, ou a falha tem `@bug-XX` e o bug está no [04-bugs.md](04-bugs.md) com passos, esperado × obtido e evidência.
+- Nenhum cenário instável (que passa e falha sem mudança na loja).
 
 ## Entregas
 
-| Documento | Conteúdo |
-|---|---|
-| [00-exploracao.md](00-exploracao.md) | Exploração manual, observações e análise da documentação (DOC-01 a DOC-17) |
-| [01-plano-de-teste.md](01-plano-de-teste.md) | Este plano |
-| [02-matriz-rastreabilidade.md](02-matriz-rastreabilidade.md) | Regra × cenário × camada, com resultado e bug |
-| [03-execucao.md](03-execucao.md) | Resultado de cada cenário por navegador e a execução manual no Google Chrome 154 |
-| [04-bugs.md](04-bugs.md) | Bugs com passos, esperado × obtido e evidência |
-| [05-evidencias/](05-evidencias/) | Prints, JSON de API, relatórios HTML da execução final e GIFs da execução manual |
-| [features/](../features/) | Cenários Gherkin |
+- [00-exploracao.md](00-exploracao.md): exploração manual, observações e análise da documentação (DOC-01 a DOC-17).
+- [01-plano-de-teste.md](01-plano-de-teste.md): este plano.
+- [02-matriz-rastreabilidade.md](02-matriz-rastreabilidade.md): regra × cenário × camada, com resultado e bug.
+- [03-execucao.md](03-execucao.md): resultado de cada cenário por navegador e a execução manual no Google Chrome 154.
+- [04-bugs.md](04-bugs.md): bugs com passos, esperado × obtido e evidência.
+- [05-evidencias/](05-evidencias/): prints, JSON de API, relatórios HTML da execução final e GIFs da execução manual.
+- [features/](../features/): cenários em Gherkin.

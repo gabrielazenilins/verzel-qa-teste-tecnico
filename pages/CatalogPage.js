@@ -1,26 +1,42 @@
-const { BASE_URL } = require('../support/config')
+const { BASE_URL } = require('../support/config');
+const S = require('./selectors');
+const Header = require('./components/Header');
 
-// Vitrine de produtos (/). Não há escolha de quantidade: cada clique soma 1 unidade.
 class CatalogPage {
-    constructor(page){
-        this.page = page
-        this.heading = page.locator('h2#titulo-vitrine')
+    constructor(page) {
+        this.page = page;
+        this.header = new Header(page);
+        this.heading = page.locator(S.seletores.tituloVitrine);
+        this.grid = page.locator(S.seletores.gradeProdutos);
+        this.gridItems = page.locator(S.seletores.itemDaGrade);
     }
-    async open(){
-        await this.page.goto(BASE_URL)
+
+    async open() {
+        await this.page.goto(BASE_URL);
     }
-    // O botão é igual em todos os cards: acha o card pelo título do produto (#nome-P00X).
-    addButton(id){
-        return this.page.locator('.produto-corpo')
-            .filter({ has: this.page.locator(`#nome-${id}`) })
-            .getByRole('button', { name: 'Adicionar ao carrinho' })
+
+    isOpen() {
+        return new URL(this.page.url()).pathname === '/';
     }
-    // "3 no carrinho"; no limite, "Limite de 5 unidades atingido." com a classe produto-aviso-limite
-    notice(id){
-        return this.page.locator(`#aviso-${id}`)
+
+    // o botão é igual em todos os cards, então acha o card pelo nome do produto
+    addButton(id) {
+        return this.page
+            .locator(S.seletores.cardProduto)
+            .filter({ has: this.page.locator(S.fill(S.seletores.nomeProduto, { id })) })
+            .getByRole('button', { name: S.botoes.adicionarAoCarrinho });
     }
-    async add(id){
-        await this.addButton(id).click()
+
+    notice(id) {
+        return this.page.locator(S.fill(S.seletores.avisoProduto, { id }));
+    }
+
+    async addToCart(id, vezes = 1) {
+        for (let i = 0; i < vezes; i++) {
+            const antes = Number(await this.header.getCartCountText());
+            await this.addButton(id).click();
+            await this.header.waitForCartCount(antes + 1); // espera o contador atualizar
+        }
     }
 }
-module.exports = CatalogPage
+module.exports = CatalogPage;

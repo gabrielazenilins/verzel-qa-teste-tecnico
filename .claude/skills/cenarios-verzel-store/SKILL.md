@@ -24,6 +24,7 @@ Skill específica deste repositório (teste técnico QA Júnior Verzel, card VZS
 ## 1. Stack e configuração
 - Playwright + Cucumber, JavaScript **CommonJS** (`require` / `module.exports`).
 - `support/world.js` abre e fecha o navegador por cenário, escolhido pela variável `BROWSER` (`chromium` é o padrão, ou `firefox`/`webkit`). Para rodar nos três: `npm run test:all` (o Chromium roda tudo; Firefox e WebKit só os `@ui`, porque a API não depende de navegador). Cada cenário começa com contexto novo, portanto **carrinho vazio** (o carrinho fica só na aba). Não crie passos de "limpar carrinho".
+- `support/ui.hooks.js` abre a vitrine em todo cenário `@ui` e confere que `ul.grade-produtos` está visível com 8 itens. Não crie passos que abram a vitrine de novo.
 - `support/config.js` exporta `BASE_URL` (`process.env.BASE_URL` com fallback para a URL da loja). Nunca escreva a URL em outro arquivo.
 - `cucumber.js` exclui `@manual` da execução (`tags: 'not @manual'`), carrega o `world.js` antes dos outros arquivos de `support/` (assim o `After` que fecha o navegador roda por último) e gera um relatório por navegador (`reports/cucumber-report-<navegador>.html`).
 - Não altere `world.js`, `config.js` nem `cucumber.js` sem perguntar.
@@ -69,14 +70,19 @@ Cada feature agrupa uma regra e pode ter cenários `@ui` e `@api`.
 | `features/checkout.feature` | nome, e-mail, CEP, confirmação | CT-60 a CT-79 |
 | `features/api-erros.feature` | contrato da API: códigos de erro, 405, produtos, fórmula do total e CA11 | CT-80 a CT-99 |
 
-Steps: todos os passos ficam num único arquivo, `steps/common.steps.js`, separados por seção (API, UI: preparação do carrinho, ações, verificações). Antes de criar um passo, procure nele: o Cucumber dá erro com passos duplicados. Só crie outro arquivo de steps se um passo for exclusivo de uma feature e não fizer sentido no vocabulário comum.
+Steps em três arquivos:
+- `steps/api.steps.js`: passos dos cenários `@api` (montagem do corpo, envio e verificações da resposta);
+- `steps/ui.steps.js`: passos dos cenários `@ui` (preparação do carrinho, ações, verificações e comparação visual);
+- `steps/common.steps.js`: só passos usados pelas duas camadas. Hoje nenhum é, então o arquivo só documenta a regra.
+
+Antes de criar um passo, procure nos três arquivos: o Cucumber dá erro com passos duplicados.
 
 ## 3. Linguagem padrão dos passos
 Keywords em inglês, Feature e Scenario em português, passos em inglês.
 **Reaproveite estes passos.** Só crie um passo novo se nenhum servir, e procure antes em todos os arquivos de steps: o Cucumber dá erro com passos duplicados.
 Valores monetários nos passos sempre como string com ponto decimal: `"23.97"`, `"0.00"`.
 
-**`steps/common.steps.js` — UI**
+**`steps/ui.steps.js` — UI**
 ```gherkin
 Given I am on the products page
 Given I have "P005" with quantity 2 in the cart       # clica N vezes em "Adicionar ao carrinho" na vitrine
@@ -111,14 +117,19 @@ Then the cart should be empty
 Then I should still be on the checkout page                # dado inválido: o pedido não é confirmado
 ```
 
-**`steps/common.steps.js` — UI (vitrine)**
+**`steps/ui.steps.js` — UI (vitrine)**
 ```gherkin
 When I add "P001" to the cart 5 times                    # cliques em "Adicionar ao carrinho" na vitrine, ficando na vitrine
 Then the add button of "P001" should be disabled
 Then I should see the limit notice of "P001" on the products page   # só que o aviso de limite aparece, sem cobrar o texto
 ```
 
-**`steps/common.steps.js` — API**
+**`steps/ui.steps.js` — comparação visual**
+```gherkin
+Then the cart page should match the visual reference "carrinho"   # tela inteira do carrinho × docs/05-evidencias/visual/<nome>_<navegador>.png
+```
+
+**`steps/api.steps.js` — API**
 ```gherkin
 Given the cart items:
   | produto | quantidade |
@@ -146,7 +157,8 @@ Then every monetary value in the response should have at most 2 decimal places
 
 ## 4. Page Objects
 - Sem `data-testid` na loja. Use, nesta ordem: `getByRole` com o nome acessível (`aria-label`), `#id`, `[data-valor=...]` e classes semânticas (`.aviso-frete`). Evite XPath e seletor por posição.
-- Métodos de ação e de leitura (`getTotalText()`), **sem `expect`**.
+- Métodos de ação e de leitura (`getTotalText()`), **sem `expect`**. Quando um método precisa esperar o efeito de uma ação, use `locator.waitFor()` ou `page.waitForFunction()` dentro dele (ex.: `CatalogPage.addToCart` espera o contador do cabeçalho subir; `CartPage.openWithItems` espera o título "Carrinho").
+- Textos e seletores repetidos ficam em `pages/selectors.json`, lidos por `pages/selectors.js` (`S.botoes`, `S.textos`, `S.seletores` e `S.fill(modelo, { nome, id, campo })`). Não escreva esses textos direto nos Page Objects nem nos steps.
 - Leituras de valor devolvem o texto cru; a conversão para número é feita no step com `money.js`.
 - Os `aria-label` usam o **nome** do produto, não o id. Converta id → nome com `support/produtos.js`.
 - Se a tela já tiver Page Object, acrescente métodos em vez de recriar.
@@ -178,33 +190,7 @@ Then every monetary value in the response should have at most 2 decimal places
 | Checkout | confirmar | `getByRole('button', { name: 'Confirmar pedido' })` |
 | Confirmação | número do pedido | `.numero-pedido` (ex.: "VZ-856317") |
 
-Os Page Objects reais estão em `pages/`; o trecho abaixo resume o `CartPage` (veja o arquivo antes de acrescentar métodos):
-```js
-class CartPage {
-    constructor(page){
-        this.page = page
-        this.heading         = page.getByRole('heading', { level: 1 })
-        this.couponInput     = page.locator('#campo-cupom')
-        this.applyCouponBtn  = page.getByRole('button', { name: 'Aplicar cupom' })
-        this.removeCouponBtn = page.getByRole('button', { name: 'Remover cupom' })
-        this.couponMessage   = page.locator('#mensagem-cupom')
-        this.couponApplied   = page.locator('.cupom-aplicado')
-        this.shippingNotice  = page.locator('.aviso-frete')
-        this.checkoutLink    = page.getByRole('link', { name: 'Finalizar compra' })
-    }
-    item(id){ /* li.item-carrinho do produto */ }
-    limitMessage(id){ /* .item-limite dentro de item(id) */ }
-    increaseButton(id){ /* "Aumentar quantidade de <nome>" */ }
-    decreaseButton(id){ /* "Diminuir quantidade de <nome>" */ }
-    quantity(id){ /* <output> do grupo "Quantidade de <nome>" */ }
-    async increase(id){ /* um clique; o step espera a quantidade mudar */ }
-    async decrease(id){ /* idem */ }
-    async remove(id){ /* "Remover <nome> do carrinho" */ }
-    async applyCoupon(code){ /* preenche e clica em "Aplicar cupom" */ }
-    async removeCoupon(){ /* clica em "Remover cupom" */ }
-    async goToCheckout(){ /* clica em "Finalizar compra" */ }
-}
-```
+Veja `pages/CartPage.js` antes de acrescentar métodos: os seletores vêm de `S.seletores` e `S.botoes` (`pages/selectors.json`), e o código segue o estilo do projeto (4 espaços, ponto e vírgula, aspas simples).
 - **Valores** (subtotal, desconto, frete, total) **não** ficam no `CartPage`: estão em `pages/components/Summary.js` (`value(nome)` / `getValueText(nome)`), que serve ao carrinho, ao checkout e à confirmação. Não duplique esses localizadores nos Page Objects.
 - Cada clique em +, −, aplicar ou remover dispara `POST /api/carrinho/calcular`. Os steps esperam o efeito na tela antes de seguir: a quantidade mudar (+/−), o cupom aplicado ou a mensagem aparecer (aplicar cupom), o campo voltar (remover cupom). Valores são lidos com `expect.poll` + `parseMoney`, devolvendo o texto cru quando a conversão falha, para o poll tentar de novo. Nunca `waitForTimeout`.
 
@@ -216,8 +202,12 @@ class CartPage {
 - `produtos.js` → mapa id → nome (`P001` → `Camiseta Essencial` …), usado para montar os `aria-label`. Os dados vêm da tabela do `CLAUDE.md`.
 - `config.js` → `BASE_URL`.
 - `api.hooks.js` → `Before({ tags: '@api' })` cria os clientes de API com `request.newContext({ baseURL, extraHTTPHeaders: { 'Content-Type': 'application/json' } })`; `After({ tags: '@api' })` faz `dispose()`.
-- `ui.hooks.js` → `Before({ tags: '@ui' })` cria os Page Objects em `this.pages` (`catalog`, `cart`, `checkout`, `confirmation`, `header`, `summary`). Roda depois do `Before` do `world.js`, que abre o navegador.
-- `evidence.hooks.js` (já implementado) → num `After` para cenários `@ui`:
+- `ui.hooks.js` → `Before({ tags: '@ui' })` cria os Page Objects em `this.pages` (`catalog`, `cart`, `checkout`, `confirmation`, `header`, `summary`), abre a vitrine e confere `ul.grade-produtos` visível com 8 itens. Roda depois do `Before` do `world.js`, que abre o navegador.
+- `visual.js` → comparação visual com pixelmatch: compara um print com a referência do navegador em `docs/05-evidencias/visual/<nome>_<navegador>.png`, com tolerância de 0,5% dos pixels (`threshold` 0.1 por pixel). Acima disso, salva `<nome>_<navegador>_diff.png` e o passo falha. Com `VISUAL_UPDATE=1`, grava a referência em vez de comparar.
+  - Hoje só o CT-21 (tag `@visual`) usa, com a **tela inteira do carrinho** (cabeçalho, itens, resumo e rodapé), sempre com os mesmos produtos. Referências: `carrinho_chromium.png`, `carrinho_firefox.png` e `carrinho_webkit.png`.
+  - O print vem de `CartPage.visualScreenshot()`: janela fixa de 1280×800 (`S.visual.janela`), página inteira (`fullPage`), mouse fora dos links, fontes e imagens carregadas, sem animação e sem cursor de texto.
+  - Áreas que mudam a cada execução são cobertas com `mask`, listadas em `S.visual.mascaras` (`pages/selectors.json`). Hoje a lista está vazia: com o mesmo carrinho, nada na tela muda entre execuções. Se aparecer algo variável, acrescente o seletor ali e gere as referências de novo.
+- `evidence.hooks.js` → num `After` para cenários `@ui`:
   - sempre que o cenário **falhar** ou tiver tag `@bug-XX`, tira `page.screenshot({ fullPage: true })`, anexa ao relatório com `this.attach(..., 'image/png')` e salva em `docs/05-evidencias/automacao/<CT-XX>_<navegador>_<status>.png` (ex.: `CT-20_chromium_falhou.png`);
   - o ID vem da tag `@CT-XX` do cenário (`pickle.tags`). Em `Scenario Outline`, acrescenta a posição do exemplo, contando todos os blocos `Examples` em ordem: `<CT-XX>-ex<N>_<navegador>_<status>.png` (ex.: `CT-02-ex2_chromium_falhou.png`). Assim cada exemplo tem o seu print, como cada um tem a sua linha no `docs/03-execucao.md`.
   Assim cada execução gera a evidência do bug sem print manual.
@@ -283,6 +273,7 @@ O exemplo resume `features/frete.feature`; lá estão os cenários completos.
 
 ## 7. Rodar e registrar
 - Um cenário: `npx cucumber-js --tags "@CT-24"`. Uma feature: `npx cucumber-js features/frete.feature`.
+- Comparação visual: `npm run test:visual:update` grava as referências nos três navegadores (rode na primeira vez e sempre que o layout mudar de propósito). Abra e aprove as imagens em `docs/05-evidencias/visual/` antes de usá-las. `npm run test:visual` só compara.
 - Timeout = revise o locator. Nunca use `waitForTimeout`.
 - **Falhou porque o sistema contraria a documentação → é bug.** Não mude o esperado para passar. Então:
   1. Adicione a tag `@bug-XX` ao cenário.

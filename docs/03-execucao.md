@@ -1,10 +1,14 @@
 # Execução
 
-Status: **Passou** (resultado igual ao esperado) · **Falhou** (o sistema respondeu diferente do esperado; vira bug) · **Bloqueado** (não foi possível executar). "—" = não executado; nas colunas Firefox e WebKit das linhas de API, "—" quer dizer "não se aplica" (a API roda só no Chromium).
+Status: Passou (resultado igual ao esperado), Falhou (a loja respondeu diferente do esperado, vira bug) ou Bloqueado (não deu para executar). "—" quer dizer que não foi executado. Nas colunas Firefox e WebKit das linhas de API, "—" quer dizer que não se aplica, porque a API roda só no Chromium.
 
-Colunas Chromium, Firefox e WebKit: resultado em cada navegador, na execução de 07/10/2026 (`npm run test:all`). Os cenários de UI rodaram nos três navegadores. Os de API não dependem de navegador e rodam uma vez, pelo Chromium; por isso ficam com "—" no Firefox e no WebKit. Os caminhos de evidência são relativos a `docs/05-evidencias/`. Os relatórios completos dessa execução, um por navegador, estão em [05-evidencias/automacao/relatorios/](05-evidencias/automacao/relatorios/): `cucumber-report-chromium.html`, `cucumber-report-firefox.html` e `cucumber-report-webkit.html`. Eles são a evidência das linhas que passaram.
+As colunas Chromium, Firefox e WebKit têm o resultado de cada navegador na execução de 08/10/2026 (`npm run test:all`). Os cenários de UI rodaram nos três navegadores. Os de API não dependem de navegador e rodaram uma vez, no Chromium.
 
-Nos `Scenario Outline`, cada exemplo tem a sua linha (ex.: `CT-24 · 199,90`), para cada resultado ter evidência própria.
+No CT-21 também comparo a tela inteira do carrinho com uma imagem de referência de cada navegador. Nessa execução deu 0 pixels diferentes nos três. As referências foram geradas no Windows; em outro sistema, gere as suas antes (README, Comparação visual).
+
+Os caminhos de evidência são relativos a `docs/05-evidencias/`. Os relatórios completos dessa execução, um por navegador, estão em [05-evidencias/automacao/relatorios/](05-evidencias/automacao/relatorios/): `cucumber-report-chromium.html`, `cucumber-report-firefox.html` e `cucumber-report-webkit.html`. Eles são a evidência das linhas que passaram.
+
+Nos `Scenario Outline`, cada exemplo tem a sua linha (ex.: `CT-24 · 199,90`), para cada resultado ter a sua evidência.
 
 ## Cupom de desconto (`features/cupom.feature`)
 
@@ -28,7 +32,7 @@ Nos `Scenario Outline`, cada exemplo tem a sua linha (ex.: `CT-24 · 199,90`), p
 | ID | Cenário | Regra | Camada | Tipo | Chromium | Firefox | WebKit | Evidência | Bug |
 |---|---|---|---|---|---|---|---|---|---|
 | CT-20 | Frete grátis com subtotal de exatamente R$ 200,00 | CA06 | UI | automatizado | Falhou | Falhou | Falhou | `automacao/CT-20_chromium_falhou.png`, `automacao/CT-20_firefox_falhou.png`, `automacao/CT-20_webkit_falhou.png` | BUG-01 |
-| CT-21 | Frete cobrado e aviso de R$ 0,10 com subtotal de R$ 199,90 | CA07 | UI | automatizado | Passou | Passou | Passou | | |
+| CT-21 | Frete cobrado e aviso de R$ 0,10 com subtotal de R$ 199,90 | CA07 | UI | automatizado | Passou | Passou | Passou | comparação visual: `visual/carrinho_chromium.png`, `visual/carrinho_firefox.png`, `visual/carrinho_webkit.png` (0 pixels diferentes) | |
 | CT-22 | Frete passa a ser grátis ao aumentar a quantidade no carrinho | CA06 | UI | automatizado | Passou | Passou | Passou | | |
 | CT-23 | API dá frete grátis com subtotal de exatamente R$ 200,00 | CA06 | API | automatizado | Falhou | — | — | `automacao/CT-23_api.json` | BUG-01 |
 | CT-24 · 219,80 | API calcula frete e valor faltante acima e abaixo de R$ 200,00 | CA06 | API | automatizado | Passou | — | — | | |
@@ -67,6 +71,7 @@ Nos `Scenario Outline`, cada exemplo tem a sua linha (ex.: `CT-24 · 199,90`), p
 | CT-62 · 01310-100 | API cria o pedido com número VZ- e CEP normalizado | regra da loja | API | automatizado | Passou | — | — | | |
 | CT-62 · 01310100 | API cria o pedido com número VZ- e CEP normalizado | regra da loja | API | automatizado | Passou | — | — | | |
 | CT-63 | API recusa pedido com dados do cliente inválidos | regra da loja | API | automatizado | Passou | — | — | | |
+| CT-64 | API recusa pedido com nome só com símbolos | regra da loja | API | automatizado | Falhou | — | — | `automacao/CT-64_api.json` | BUG-04 |
 
 ## Contrato da API (`features/api-erros.feature`)
 
@@ -89,9 +94,9 @@ Nos `Scenario Outline`, cada exemplo tem a sua linha (ex.: `CT-24 · 199,90`), p
 
 ---
 
-## Execução manual — Google Chrome 154
+## Execução manual no Google Chrome 154
 
-A exploração manual de 06/10/2026, feita no Google Chrome 154.0.8037.98 e registrada em [00-exploracao.md](00-exploracao.md), já cobre a maior parte dos cenários de UI. Para não repetir o trabalho, cada exemplo aponta para o item da exploração que o cobre e usa o resultado registrado ali. Os dois que nenhum item cobria (CT-03 e CT-22) foram executados à mão em 07/10/2026, no Google Chrome, e gravados em GIF; os passos e as gravações estão logo abaixo da tabela.
+A exploração manual de 06/10/2026, no Google Chrome 154.0.8037.98, já cobre a maior parte dos cenários de UI (está no [00-exploracao.md](00-exploracao.md)). Para não fazer tudo de novo, cada exemplo aponta para o item da exploração que o cobre e usa o resultado de lá. Os dois que nenhum item cobria, CT-03 e CT-22, eu executei na mão em 07/10/2026, no Google Chrome, e gravei em GIF. Os passos e as gravações estão depois da tabela.
 
 | ID | Cenário | Item da exploração | Resultado | Evidência |
 |---|---|---|---|---|
@@ -99,7 +104,7 @@ A exploração manual de 06/10/2026, feita no Google Chrome 154.0.8037.98 e regi
 | CT-02 · XYZ123 | Cupom recusado mostra o motivo e não dá desconto | 3-05, 3-11 | Passou: "Cupom inválido.", sem desconto (o desconto só entrou ao aplicar o BEMVINDO10 em seguida). Carrinho de R$ 239,70, não o P005 do cenário; a regra não depende do carrinho | só registro em texto |
 | CT-02 · VERAO2026 | Cupom recusado mostra o motivo e não dá desconto | 3-06, seção 7 | Passou: "Cupom expirado." e, com P005, total R$ 119,90 sem desconto | só registro em texto |
 | CT-03 | Para trocar de cupom, o cliente remove o atual e aplica outro | 3-09 e 3-10 cobrem só parte (cupom único e remoção); o resto foi executado à mão | Passou (execução manual, 07/10/2026): depois de remover o BEMVINDO10, o campo voltou; o VERAO2026 mostrou "Cupom expirado.", com subtotal e total de R$ 239,70 | [`manual/CT-03_chrome.gif`](05-evidencias/manual/CT-03_chrome.gif) |
-| CT-20 | Frete grátis com subtotal de exatamente R$ 200,00 | 4-01 | **Falhou (BUG-01)**: frete R$ 19,90, total R$ 219,90 e "Faltam R$ 0,00 para o frete grátis." | `exploracao/EXP-4-01_frete-200-payload.png`, `exploracao/EXP-4-01_frete-200-response.png` |
+| CT-20 | Frete grátis com subtotal de exatamente R$ 200,00 | 4-01 | Falhou (BUG-01): frete R$ 19,90, total R$ 219,90 e "Faltam R$ 0,00 para o frete grátis." | `exploracao/EXP-4-01_frete-200-payload.png`, `exploracao/EXP-4-01_frete-200-response.png` |
 | CT-21 | Frete cobrado e aviso de R$ 0,10 com subtotal de R$ 199,90 | 4-02 | Passou: frete R$ 19,90 e faltam R$ 0,10 | só registro em texto |
 | CT-22 | Frete passa a ser grátis ao aumentar a quantidade no carrinho | nenhum (a exploração não cruzou o limite pelo botão +); executado à mão | Passou (execução manual, 07/10/2026): com 3 camisetas, R$ 179,70 e "Faltam R$ 20,30"; depois do "+", quantidade 4, R$ 239,60, frete "Grátis" e sem o aviso | [`manual/CT-22_chrome.gif`](05-evidencias/manual/CT-22_chrome.gif) |
 | CT-50 | Carrinho trava o botão + ao chegar a 5 unidades | seção 2, "Limite de 5 unidades (CA10)" | Passou: com 5 unidades, o + fica desabilitado e aparece "Limite de 5 unidades por produto." | só registro em texto |
@@ -110,11 +115,11 @@ A exploração manual de 06/10/2026, feita no Google Chrome 154.0.8037.98 e regi
 | CT-61 · cep 7 dígitos | Dado do cliente inválido mostra a mensagem do campo e não confirma o pedido | 5-10 | Passou: "Informe um CEP com 8 dígitos." | só registro em texto |
 | CT-61 · cep 9 dígitos | Dado do cliente inválido mostra a mensagem do campo e não confirma o pedido | 5-11 | Passou: "Informe um CEP com 8 dígitos." | só registro em texto |
 
-### Cenários executados à mão (sem cobertura na exploração)
+### Cenários que executei na mão (sem cobertura na exploração)
 
-Abra uma **nova janela anônima** (Ctrl+Shift+N) em https://verzel-store.qa-test-verzel-store.workers.dev/ para cada cenário: o carrinho fica guardado só na aba, então ele começa vazio. "Adicionar" = clicar em "Adicionar ao carrinho" no card do produto; cada clique soma 1 unidade. As gravações estão em `docs/05-evidencias/manual/`.
+Para cada cenário, abri uma janela anônima nova (Ctrl+Shift+N) em https://verzel-store.qa-test-verzel-store.workers.dev/. O carrinho fica guardado só na aba, então ele começa vazio. "Adicionar" é clicar em "Adicionar ao carrinho" no card do produto, e cada clique soma 1 unidade. As gravações estão em `docs/05-evidencias/manual/`.
 
-**CT-03 — Para trocar de cupom, o cliente remove o atual e aplica outro**
+#### CT-03: Para trocar de cupom, o cliente remove o atual e aplica outro
 1. Adicionar 1 Calça Jeans Slim e 2 Boné Aba Curva (2 cliques).
 2. Abrir o Carrinho no cabeçalho, digitar `BEMVINDO10` no campo de cupom e clicar em "Aplicar cupom".
 3. Clicar em "Remover cupom".
@@ -122,17 +127,17 @@ Abra uma **nova janela anônima** (Ctrl+Shift+N) em https://verzel-store.qa-test
 
 Esperado: depois do passo 3, o campo de cupom volta. No passo 4 aparece "Cupom expirado.", e o resumo mostra subtotal R$ 239,70 e total R$ 239,70, sem desconto.
 
-Resultado: **Passou**.
+Resultado: Passou.
 
 ![CT-03 executado no Chrome: remover o BEMVINDO10 e aplicar o VERAO2026](05-evidencias/manual/CT-03_chrome.gif)
 
-**CT-22 — Frete passa a ser grátis ao aumentar a quantidade no carrinho**
+#### CT-22: Frete passa a ser grátis ao aumentar a quantidade no carrinho
 1. Adicionar 3 Camiseta Essencial (3 cliques).
 2. Abrir o Carrinho no cabeçalho. Conferir: subtotal R$ 179,70, frete R$ 19,90 e o aviso "Faltam R$ 20,30 para o frete grátis.".
 3. Clicar uma vez no "+" da Camiseta Essencial.
 
 Esperado: quantidade 4, subtotal R$ 239,60, frete "Grátis", total R$ 239,60, e o aviso "Faltam R$ ..." some.
 
-Resultado: **Passou**.
+Resultado: Passou.
 
 ![CT-22 executado no Chrome: de 3 para 4 camisetas, o frete passa a ser grátis](05-evidencias/manual/CT-22_chrome.gif)

@@ -21,7 +21,9 @@ Feature: Frete grátis
 
   # Interpretação (DOC-02, DOC-15): o texto do aviso "Faltam R$ X para o frete grátis." é o da interface
   # (comportamento observado); a documentação só diz que o carrinho informa quanto falta.
-  @CT-21 @CA07 @ui @automatizado
+  # Comparação visual: a tela inteira do carrinho, sempre com estes produtos, é comparada com a referência do
+  # navegador (docs/05-evidencias/visual/carrinho_<navegador>.png).
+  @CT-21 @CA07 @ui @automatizado @visual
   Scenario: Frete cobrado e aviso de R$ 0,10 com subtotal de R$ 199,90
     Given I have the following items in the cart:
       | produto | quantidade |
@@ -32,6 +34,7 @@ Feature: Frete grátis
     And the shipping should be "19.90"
     And the total should be "219.80"
     And the free shipping notice should be "Faltam R$ 0,10 para o frete grátis."
+    And the cart page should match the visual reference "carrinho"
 
   # Interpretação (DOC-15): com frete grátis, o aviso "Faltam R$ X" não é exibido.
   @CT-22 @CA06 @ui @automatizado
@@ -127,7 +130,7 @@ Feature: Frete grátis
 
   # ---------------------------------------------------------------- API (POST /api/pedidos)
 
-  # O BUG-01 também chega ao pedido: na execução de 07/10/2026, o pedido saiu com 201, frete 19,9
+  # O BUG-01 também chega ao pedido: na execução final, o pedido saiu com 201, frete 19,9
   # e total 219,9 (evidência em docs/05-evidencias/automacao/CT-27_api.json; o número do pedido muda a cada execução).
   @CT-27 @CA06 @api @automatizado @bug-01
   Scenario: Pedido com subtotal de exatamente R$ 200,00 sai com frete grátis

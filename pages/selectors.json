@@ -1,0 +1,52 @@
+{
+  "_comentario": "Textos e seletores da loja usados pelos Page Objects e pelos hooks. {nome} = nome do produto (support/produtos.js); {id} = id do produto; {campo} = nome, email ou cep.",
+  "textos": {
+    "tituloVitrine": "Produtos",
+    "tituloCarrinho": "Carrinho",
+    "tituloCheckout": "Finalizar compra",
+    "seloConfirmacao": "Pedido confirmado",
+    "pagamentoNaEntrega": "o pagamento será feito na entrega",
+    "freteGratis": "Grátis",
+    "quantidadeDeProdutosNaVitrine": 8
+  },
+  "botoes": {
+    "adicionarAoCarrinho": "Adicionar ao carrinho",
+    "aplicarCupom": "Aplicar cupom",
+    "removerCupom": "Remover cupom",
+    "finalizarCompra": "Finalizar compra",
+    "confirmarPedido": "Confirmar pedido",
+    "aumentarQuantidade": "Aumentar quantidade de {nome}",
+    "diminuirQuantidade": "Diminuir quantidade de {nome}",
+    "removerProduto": "Remover {nome} do carrinho",
+    "grupoQuantidade": "Quantidade de {nome}"
+  },
+  "seletores": {
+    "gradeProdutos": "ul.grade-produtos",
+    "itemDaGrade": "ul.grade-produtos > li",
+    "tituloVitrine": "h2#titulo-vitrine",
+    "cardProduto": ".produto-corpo",
+    "nomeProduto": "#nome-{id}",
+    "avisoProduto": "#aviso-{id}",
+    "contadorCarrinho": ".contador-carrinho",
+    "linkCarrinho": "^Carrinho",
+    "campoCupom": "#campo-cupom",
+    "mensagemCupom": "#mensagem-cupom",
+    "cupomAplicado": ".cupom-aplicado",
+    "avisoFrete": ".aviso-frete",
+    "itemCarrinho": "li.item-carrinho",
+    "avisoLimiteCarrinho": ".item-limite",
+    "valorResumo": "[data-valor=\"{nome}\"]",
+    "campoCliente": "#campo-{campo}",
+    "erroCampoCliente": "#campo-{campo}-erro",
+    "seloConfirmacao": ".confirmacao-selo",
+    "numeroPedido": ".numero-pedido"
+  },
+  "visual": {
+    "_comentario": "Comparação visual da tela inteira do carrinho (support/visual.js). mascaras = seletores de áreas que mudam a cada execução e são cobertas no print. Hoje nenhuma: com o mesmo carrinho (CT-21), valores, nomes e contador são sempre iguais.",
+    "janela": {
+      "width": 1280,
+      "height": 800
+    },
+    "mascaras": []
+  }
+}

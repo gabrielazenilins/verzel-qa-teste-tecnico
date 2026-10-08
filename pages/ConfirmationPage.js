@@ -1,14 +1,15 @@
-// Pedido confirmado (/pedido-confirmado).
+const S = require('./selectors');
+
 class ConfirmationPage {
-    constructor(page){
-        this.page = page
-        this.seal        = page.locator('.confirmacao-selo')
-        this.orderNumber = page.locator('.numero-pedido')
-        // "Obrigado, Maria. Seu pedido foi registrado e o pagamento será feito na entrega."
-        this.paymentOnDelivery = page.getByText('o pagamento será feito na entrega')
+    constructor(page) {
+        this.page = page;
+        this.seal = page.locator(S.seletores.seloConfirmacao);
+        this.orderNumber = page.locator(S.seletores.numeroPedido);
+        this.paymentOnDelivery = page.getByText(S.textos.pagamentoNaEntrega);
     }
-    async getOrderNumberText(){
-        return this.orderNumber.innerText()
+
+    async getOrderNumberText() {
+        return this.orderNumber.innerText();
     }
 }
-module.exports = ConfirmationPage
+module.exports = ConfirmationPage;

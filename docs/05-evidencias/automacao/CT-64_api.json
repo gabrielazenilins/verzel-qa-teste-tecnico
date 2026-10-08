@@ -1,17 +1,17 @@
 {
-  "cenario": "Pedido com subtotal de exatamente R$ 200,00 sai com frete grátis",
+  "cenario": "API recusa pedido com nome só com símbolos",
   "tags": [
-    "@CT-27",
-    "@CA06",
+    "@CT-64",
+    "@regra-loja",
     "@api",
     "@automatizado",
-    "@bug-01"
+    "@bug-04"
   ],
-  "executadoEm": "2026-10-08T03:04:15.052Z",
+  "executadoEm": "2026-10-08T03:03:59.616Z",
   "falha": {
-    "mensagem": "Error: campo \"frete\"",
-    "esperado": "0",
-    "obtido": "19.9"
+    "mensagem": "Error: status HTTP",
+    "esperado": "422",
+    "obtido": "201"
   },
   "chamadas": [
     {
@@ -22,11 +22,11 @@
           "itens": [
             {
               "produtoId": "P005",
-              "quantidade": 2
+              "quantidade": 1
             }
           ],
           "cliente": {
-            "nome": "Maria Silva",
+            "nome": "@@ @@",
             "email": "maria@exemplo.com",
             "cep": "01310-100"
           }
@@ -34,10 +34,10 @@
       },
       "status": 201,
       "resposta": {
-        "numero": "VZ-352100",
-        "criadoEm": "2026-10-08T03:04:15.113Z",
+        "numero": "VZ-654249",
+        "criadoEm": "2026-10-08T03:03:59.683Z",
         "cliente": {
-          "nome": "Maria Silva",
+          "nome": "@@ @@",
           "email": "maria@exemplo.com",
           "cep": "01310100"
         },
@@ -46,16 +46,16 @@
             "produtoId": "P005",
             "nome": "Mochila Urbana 20L",
             "precoUnitario": 100,
-            "quantidade": 2,
-            "total": 200
+            "quantidade": 1,
+            "total": 100
           }
         ],
-        "subtotal": 200,
+        "subtotal": 100,
         "desconto": 0,
         "frete": 19.9,
         "freteGratis": false,
-        "valorFaltanteFreteGratis": 0,
-        "total": 219.9,
+        "valorFaltanteFreteGratis": 100,
+        "total": 119.9,
         "cupom": null
       }
     }
