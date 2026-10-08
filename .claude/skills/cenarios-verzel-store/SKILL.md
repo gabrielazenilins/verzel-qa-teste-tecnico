@@ -184,7 +184,7 @@ Then every monetary value in the response should have at most 2 decimal places
 | Carrinho | finalizar | `getByRole('link', { name: 'Finalizar compra' })` |
 | Carrinho | esvaziar | `getByRole('button', { name: 'Esvaziar carrinho' })` |
 | Carrinho, Checkout, Confirmação | valores | `[data-valor="subtotal"]`, `[data-valor="desconto"]`, `[data-valor="frete"]`, `[data-valor="total"]` |
-| Checkout, Confirmação | itens do resumo | `.resumo-itens li` (ex.: "5x Kit 3 Pares de Meias · R$ 149,50") |
+| Checkout, Confirmação | itens do resumo | `.resumo-itens li`; o nome do item fica num `<span>` (ex.: `<span>5x Kit 3 Pares de Meias</span>`), com o valor do item (R$ 149,50) |
 | Checkout | campos | `#campo-nome`, `#campo-email`, `#campo-cep` |
 | Checkout | erros dos campos | `#campo-nome-erro`, `#campo-email-erro`, `#campo-cep-erro` |
 | Checkout | confirmar | `getByRole('button', { name: 'Confirmar pedido' })` |

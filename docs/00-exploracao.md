@@ -80,7 +80,7 @@ Prints: `EXP-4-01_frete-200-payload.png`, `EXP-4-01_frete-200-response.png` e `E
 
 - Chego pelo link "Finalizar compra" do carrinho. A rota é `/checkout`, com o título "Finalizar compra" e um link para voltar ao carrinho.
 - Campos: Nome completo, E-mail e CEP (com a dica "Somente números ou no formato 00000-000."). Logo abaixo: "O pagamento é feito na entrega."
-- O resumo repete os valores do carrinho e lista os itens (ex.: "5x Kit 3 Pares de Meias — R$ 149,50").
+- O resumo repete os valores do carrinho e lista os itens com o valor de cada um. O nome do item aparece como `<span>5x Kit 3 Pares de Meias</span>`, e o valor desse item é R$ 149,50.
 - Não consegui chegar ao checkout com o carrinho vazio, porque o botão de finalizar não aparece.
 - As mensagens de erro só aparecem depois de clicar em "Confirmar pedido", e não ao sair de cada campo.
 
